@@ -100,10 +100,17 @@ export default function Register() {
       />
 
       <div className="auth-card glass-strong animate-scale-in">
-        <div className="auth-header">
-          <div className="logo">
-            <span className="text-gradient">Power</span>World
-          </div>
+        <div className="auth-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <img
+            src="/logo.jpg"
+            alt="Power World Logo"
+            style={{
+              maxHeight: '60px',
+              width: 'auto',
+              marginBottom: '16px',
+              objectFit: 'contain',
+            }}
+          />
           <p>Create your staff account</p>
         </div>
 

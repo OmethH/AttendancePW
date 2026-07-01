@@ -1,20 +1,21 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { LayoutDashboard, Users, ClipboardList, QrCode } from 'lucide-react';
 
 export default function Sidebar({ isOpen, onClose }) {
   const { isAdmin } = useAuth();
   const location = useLocation();
 
   const adminLinks = [
-    { to: '/admin', icon: '📊', label: 'Dashboard', end: true },
-    { to: '/admin/staff', icon: '👥', label: 'Staff Management' },
-    { to: '/admin/reports', icon: '📋', label: 'Attendance Reports' },
-    { to: '/admin/kiosk', icon: '📱', label: 'QR Kiosk' },
+    { to: '/admin', icon: <LayoutDashboard size={18} />, label: 'Dashboard', end: true },
+    { to: '/admin/staff', icon: <Users size={18} />, label: 'Staff Management' },
+    { to: '/admin/reports', icon: <ClipboardList size={18} />, label: 'Attendance Reports' },
+    { to: '/admin/kiosk', icon: <QrCode size={18} />, label: 'QR Code' },
   ];
 
   const staffLinks = [
-    { to: '/staff', icon: '🏠', label: 'My Dashboard', end: true },
-    { to: '/staff/scan', icon: '📷', label: 'Scan QR Code' },
+    { to: '/staff', icon: <LayoutDashboard size={18} />, label: 'My Dashboard', end: true },
+    { to: '/staff/scan', icon: <QrCode size={18} />, label: 'Scan QR Code' },
   ];
 
   const links = isAdmin ? adminLinks : staffLinks;
@@ -60,36 +61,17 @@ export default function Sidebar({ isOpen, onClose }) {
         </button>
 
         {/* Brand */}
-        <div
-          style={{
-            padding: 'var(--space-lg) var(--space-lg)',
-            borderBottom: '1px solid var(--border-subtle)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-sm)',
-            height: 'var(--navbar-height)',
-          }}
-        >
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 'var(--radius-md)',
-            background: 'var(--gradient-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.1rem',
-          }}
-        >
-          ✓
+        <div className="sidebar-brand-container" style={{ display: 'flex', justifyContent: 'center', padding: '20px var(--space-md)', borderBottom: '1px solid var(--border-subtle)' }}>
+          <img
+            src="/logo.png"
+            alt="Power World Logo"
+            style={{
+              width: '100%',
+              maxHeight: '55px',
+              objectFit: 'contain',
+            }}
+          />
         </div>
-        <div>
-          <div style={{ fontWeight: 800, fontSize: 'var(--font-lg)', letterSpacing: '-0.02em' }}>
-            <span className="text-gradient">Attend</span>Ease
-          </div>
-        </div>
-      </div>
 
       {/* Navigation */}
       <nav style={{ padding: 'var(--space-md)', flex: 1 }}>

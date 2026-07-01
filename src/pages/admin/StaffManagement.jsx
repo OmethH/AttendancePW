@@ -157,7 +157,7 @@ export default function StaffManagement() {
         <input
           type="text"
           className="input"
-          placeholder="🔍 Search by name, email, or department..."
+          placeholder="Search by name, email, or department..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           id="staff-search-input"

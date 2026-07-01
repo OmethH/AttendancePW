@@ -274,7 +274,7 @@ export default function AttendanceReports() {
           <div className="input-group" style={{ justifyContent: 'flex-end' }}>
             <label>&nbsp;</label>
             <button type="submit" className="btn btn-primary" id="apply-filters-btn">
-              🔍 Apply Filters
+              Apply Filters
             </button>
           </div>
         </div>

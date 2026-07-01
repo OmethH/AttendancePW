@@ -185,7 +185,7 @@ export default function AdminDashboard() {
         {/* Weekly Chart */}
         <div className="glass" style={{ padding: 'var(--space-lg)' }}>
           <h3 style={{ fontSize: 'var(--font-lg)', marginBottom: 'var(--space-md)' }}>
-            📈 Weekly Attendance Trend
+            Weekly Attendance Trend
           </h3>
           <div style={{ width: '100%', height: 250 }}>
             <ResponsiveContainer>
@@ -226,7 +226,7 @@ export default function AdminDashboard() {
         {/* Quick Stats */}
         <div className="glass" style={{ padding: 'var(--space-lg)' }}>
           <h3 style={{ fontSize: 'var(--font-lg)', marginBottom: 'var(--space-md)' }}>
-            ⚡ Quick Overview
+            Quick Overview
           </h3>
           <div className="flex flex-col gap-md">
             <InfoRow
@@ -273,7 +273,7 @@ export default function AdminDashboard() {
       {/* Recent Activity */}
       <div>
         <h3 style={{ fontSize: 'var(--font-lg)', marginBottom: 'var(--space-md)' }}>
-          🕐 Recent Activity
+           Recent Activity
         </h3>
         <AttendanceTable records={recentRecords} pageSize={8} />
       </div>
