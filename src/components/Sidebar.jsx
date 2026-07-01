@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const { isAdmin } = useAuth();
   const location = useLocation();
 
@@ -20,34 +20,56 @@ export default function Sidebar() {
   const links = isAdmin ? adminLinks : staffLinks;
 
   return (
-    <aside
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        bottom: 0,
-        width: 'var(--sidebar-width)',
-        background: 'rgba(15, 15, 35, 0.95)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderRight: '1px solid var(--border-subtle)',
-        display: 'flex',
-        flexDirection: 'column',
-        zIndex: 200,
-        overflowY: 'auto',
-      }}
-    >
-      {/* Brand */}
-      <div
-        style={{
-          padding: 'var(--space-lg) var(--space-lg)',
-          borderBottom: '1px solid var(--border-subtle)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-sm)',
-          height: 'var(--navbar-height)',
-        }}
-      >
+    <>
+      {/* Mobile Backdrop */}
+      {isOpen && (
+        <div
+          onClick={onClose}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(5, 5, 15, 0.6)',
+            backdropFilter: 'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)',
+            zIndex: 190,
+          }}
+        />
+      )}
+
+      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+        {/* Mobile Close button */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            fontSize: '1.25rem',
+            cursor: 'pointer',
+          }}
+          className="sidebar-close-btn-inline"
+          aria-label="Close menu"
+        >
+          ✕
+        </button>
+
+        {/* Brand */}
+        <div
+          style={{
+            padding: 'var(--space-lg) var(--space-lg)',
+            borderBottom: '1px solid var(--border-subtle)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-sm)',
+            height: 'var(--navbar-height)',
+          }}
+        >
         <div
           style={{
             width: 36,
@@ -126,5 +148,6 @@ export default function Sidebar() {
         AttendEase v1.0
       </div>
     </aside>
+    </>
   );
 }

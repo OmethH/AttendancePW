@@ -430,6 +430,45 @@ select.input option {
   min-height: 100vh;
 }
 
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  background: rgba(15, 15, 35, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  z-index: 200;
+  overflow-y: auto;
+  transition: transform var(--transition-base);
+}
+
+.sidebar.open {
+  transform: translateX(0) !important;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: var(--sidebar-width);
+  height: var(--navbar-height);
+  background: rgba(10, 10, 26, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-xl);
+  z-index: 100;
+  transition: left var(--transition-base);
+}
+
 .main-content {
   flex: 1;
   margin-left: var(--sidebar-width);
@@ -639,6 +678,15 @@ tbody tr:hover {
 
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .navbar {
+    left: 0;
+    padding: 0 var(--space-md);
+  }
+
   .main-content {
     margin-left: 0;
     padding: var(--space-md);
@@ -901,4 +949,22 @@ tbody tr:hover {
   background: rgba(108, 92, 231, 0.15);
   border: 1px solid rgba(108, 92, 231, 0.3);
   color: var(--accent-primary);
+}
+
+.menu-toggle-btn {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .menu-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: var(--space-sm);
+  }
 }

@@ -1,7 +1,7 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-export default function Navbar() {
+export default function Navbar({ onMenuClick }) {
   const { userProfile, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
@@ -20,24 +20,17 @@ export default function Navbar() {
     : '??';
 
   return (
-    <nav
-      style={{
-        position: 'fixed',
-        top: 0,
-        right: 0,
-        left: 'var(--sidebar-width)',
-        height: 'var(--navbar-height)',
-        background: 'rgba(10, 10, 26, 0.8)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: '1px solid var(--border-subtle)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 var(--space-xl)',
-        zIndex: 100,
-      }}
-    >
+    <nav className="navbar">
+      {/* Mobile Menu Toggle Button */}
+      <button
+        onClick={onMenuClick}
+        className="menu-toggle-btn"
+        aria-label="Open menu"
+        style={{ marginRight: '16px' }}
+      >
+        ☰
+      </button>
+
       {/* Page context - will be overridden or left blank */}
       <div />
 
