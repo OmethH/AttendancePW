@@ -21,6 +21,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import { Search } from 'lucide-react';    
 
 const DEPARTMENTS = [
   { value: 'Finance', label: 'Finance' },
@@ -274,6 +275,7 @@ export default function AttendanceReports() {
           <div className="input-group" style={{ justifyContent: 'flex-end' }}>
             <label>&nbsp;</label>
             <button type="submit" className="btn btn-primary" id="apply-filters-btn">
+              <Search size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
               Apply Filters
             </button>
           </div>
@@ -285,7 +287,7 @@ export default function AttendanceReports() {
         <div className="grid-2" style={{ marginBottom: 'var(--space-xl)' }}>
           <div className="glass" style={{ padding: 'var(--space-lg)' }}>
             <h3 style={{ fontSize: 'var(--font-lg)', marginBottom: 'var(--space-md)' }}>
-              📊 Daily Check-ins
+               Daily Check-ins
             </h3>
             <div style={{ width: '100%', height: 250 }}>
               <ResponsiveContainer>
@@ -317,7 +319,7 @@ export default function AttendanceReports() {
 
           <div className="glass" style={{ padding: 'var(--space-lg)' }}>
             <h3 style={{ fontSize: 'var(--font-lg)', marginBottom: 'var(--space-md)' }}>
-              🍩 Check-in vs Check-out
+              Check-in vs Check-out
             </h3>
             <div style={{ width: '100%', height: 250 }}>
               <ResponsiveContainer>

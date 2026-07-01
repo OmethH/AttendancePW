@@ -382,7 +382,7 @@ export default function QRKiosk() {
 
       {/* Instruction */}
       <div className="kiosk-instruction" style={{ maxWidth: '450px', margin: 'var(--space-lg) auto 0' }}>
-        📱 Scan this QR code with your phone camera to check in or out. Your GPS location will be verified.
+         Scan this QR code with your phone camera to check in or out. Your GPS location will be verified.
       </div>
 
       <div style={{ marginTop: 'var(--space-xl)', display: 'flex', gap: '24px', color: 'var(--text-tertiary)', fontSize: 'var(--font-xs)' }}>
