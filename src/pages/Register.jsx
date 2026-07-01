@@ -94,7 +94,7 @@ export default function Register() {
           width: '500px',
           height: '500px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(253,121,168,0.06) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(216,0,0,0.06) 0%, transparent 70%)',
           pointerEvents: 'none',
         }}
       />
@@ -102,7 +102,7 @@ export default function Register() {
       <div className="auth-card glass-strong animate-scale-in">
         <div className="auth-header">
           <div className="logo">
-            <span className="text-gradient">Attend</span>Ease
+            <span className="text-gradient">Power</span>World
           </div>
           <p>Create your staff account</p>
         </div>

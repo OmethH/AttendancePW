@@ -58,7 +58,7 @@ export default function Login() {
           width: '500px',
           height: '500px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(108,92,231,0.08) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(216,0,0,0.08) 0%, transparent 70%)',
           pointerEvents: 'none',
         }}
       />
@@ -70,7 +70,7 @@ export default function Login() {
           width: '400px',
           height: '400px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(0,206,201,0.06) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255,63,52,0.06) 0%, transparent 70%)',
           pointerEvents: 'none',
         }}
       />
@@ -78,7 +78,7 @@ export default function Login() {
       <div className="auth-card glass-strong animate-scale-in">
         <div className="auth-header">
           <div className="logo">
-            <span className="text-gradient">Attend</span>Ease
+            <span className="text-gradient">Power</span>World
           </div>
           <p>Sign in to manage attendance</p>
         </div>

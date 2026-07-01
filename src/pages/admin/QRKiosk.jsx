@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import {
   collection,
@@ -14,11 +15,11 @@ import { db } from '../../firebase';
 import { buildStaticQRPayload } from '../../utils/qrTokenUtils';
 
 export default function QRKiosk() {
+  const navigate = useNavigate();
   const [offices, setOffices] = useState([]);
   const [selectedOffice, setSelectedOffice] = useState('');
   const [qrPayload, setQrPayload] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isFullscreen, setIsFullscreen] = useState(false);
   
   // Office management state
   const [showManager, setShowManager] = useState(false);
@@ -133,24 +134,6 @@ export default function QRKiosk() {
     setTimeout(() => setToast(null), 3000);
   }
 
-  function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  }
-
-  useEffect(() => {
-    function onFullscreenChange() {
-      setIsFullscreen(!!document.fullscreenElement);
-    }
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
-  }, []);
-
   const timeStr = currentTime.toLocaleTimeString('en', {
     hour: '2-digit',
     minute: '2-digit',
@@ -245,10 +228,10 @@ export default function QRKiosk() {
 
         <button
           className="btn btn-secondary btn-sm"
-          onClick={toggleFullscreen}
-          id="fullscreen-toggle-btn"
+          onClick={() => navigate('/admin')}
+          id="kiosk-back-btn"
         >
-          {isFullscreen ? '⊠ Exit' : '⊞ Fullscreen'}
+          ← Back
         </button>
       </div>
 

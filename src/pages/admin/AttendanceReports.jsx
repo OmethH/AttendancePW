@@ -8,7 +8,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import AttendanceTable from '../../components/AttendanceTable';
-import { exportToCSV, exportToPDF } from '../../utils/exportUtils';
+import { exportToCSV } from '../../utils/exportUtils';
 import {
   BarChart,
   Bar,
@@ -22,6 +22,15 @@ import {
   Cell,
 } from 'recharts';
 
+const DEPARTMENTS = [
+  { value: 'Finance', label: 'Finance' },
+  { value: 'Maintenance', label: 'Maintenance' },
+  { value: 'HR', label: 'Human Resources' },
+  { value: 'Operations', label: 'Operations' },
+  { value: 'IT', label: 'IT' },
+  { value: 'Business', label: 'Business' },
+];
+
 export default function AttendanceReports() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -32,12 +41,10 @@ export default function AttendanceReports() {
     department: '',
     office: '',
   });
-  const [departments, setDepartments] = useState([]);
   const [offices, setOffices] = useState([]);
   const [chartData, setChartData] = useState({ daily: [], department: [] });
 
   useEffect(() => {
-    fetchDepartments();
     fetchOffices();
     fetchRecords();
   }, []);
@@ -52,12 +59,6 @@ export default function AttendanceReports() {
     return date.toISOString().split('T')[0];
   }
 
-  async function fetchDepartments() {
-    const snap = await getDocs(query(collection(db, 'users'), where('role', '==', 'staff')));
-    const depts = [...new Set(snap.docs.map((d) => d.data().department).filter(Boolean))];
-    setDepartments(depts);
-  }
-
   async function fetchOffices() {
     try {
       const snap = await getDocs(query(collection(db, 'offices'), orderBy('name', 'asc')));
@@ -70,33 +71,42 @@ export default function AttendanceReports() {
   async function fetchRecords() {
     setLoading(true);
     try {
-      let q = query(
+      // Query attendance ordered by timestamp to avoid composite index requirement
+      const q = query(
         collection(db, 'attendance'),
-        where('date', '>=', filters.startDate),
-        where('date', '<=', filters.endDate),
-        orderBy('date', 'desc'),
         orderBy('timestamp', 'desc')
       );
 
       const snap = await getDocs(q);
       let data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-      // Client-side filters
+      // 1. Start Date filter
+      if (filters.startDate) {
+        data = data.filter((r) => r.date >= filters.startDate);
+      }
+
+      // 2. End Date filter
+      if (filters.endDate) {
+        data = data.filter((r) => r.date <= filters.endDate);
+      }
+
+      // 3. Staff Name filter
       if (filters.staffName) {
-        const q = filters.staffName.toLowerCase();
-        data = data.filter((r) => r.userName?.toLowerCase().includes(q));
+        const qStr = filters.staffName.toLowerCase();
+        data = data.filter((r) => r.userName?.toLowerCase().includes(qStr));
       }
 
-      // For department filter, we need to cross-reference users
+      // 4. Department filter (cross-referenced from users)
       if (filters.department) {
-        const usersSnap = await getDocs(
-          query(collection(db, 'users'), where('department', '==', filters.department))
-        );
-        const userIds = new Set(usersSnap.docs.map((d) => d.id));
-        data = data.filter((r) => userIds.has(r.userId));
+        const usersSnap = await getDocs(collection(db, 'users'));
+        const userDepts = {};
+        usersSnap.forEach((doc) => {
+          userDepts[doc.id] = doc.data().department;
+        });
+        data = data.filter((r) => userDepts[r.userId] === filters.department);
       }
 
-      // Office location filter
+      // 5. Office location filter
       if (filters.office) {
         data = data.filter((r) => r.office === filters.office);
       }
@@ -156,13 +166,6 @@ export default function AttendanceReports() {
     exportToCSV(records, `attendance_${filters.startDate}_${filters.endDate}`);
   }
 
-  function handleExportPDF() {
-    exportToPDF(records, `attendance_${filters.startDate}_${filters.endDate}`, {
-      dateRange: `${filters.startDate} to ${filters.endDate}`,
-      department: filters.department || 'All',
-    });
-  }
-
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -195,20 +198,12 @@ export default function AttendanceReports() {
           </div>
           <div className="flex gap-sm">
             <button
-              className="btn btn-secondary btn-sm"
+              className="btn btn-primary btn-sm"
               onClick={handleExportCSV}
               disabled={records.length === 0}
               id="export-csv-btn"
             >
               📄 Export CSV
-            </button>
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={handleExportPDF}
-              disabled={records.length === 0}
-              id="export-pdf-btn"
-            >
-              📑 Export PDF
             </button>
           </div>
         </div>
@@ -257,8 +252,8 @@ export default function AttendanceReports() {
               onChange={(e) => setFilters((f) => ({ ...f, department: e.target.value }))}
             >
               <option value="">All Departments</option>
-              {departments.map((d) => (
-                <option key={d} value={d}>{d}</option>
+              {DEPARTMENTS.map((d) => (
+                <option key={d.value} value={d.value}>{d.label}</option>
               ))}
             </select>
           </div>

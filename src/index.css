@@ -6,19 +6,19 @@
 /* ── CSS Custom Properties ────────────────────────────────── */
 :root {
   /* Background & Surface Colors */
-  --bg-primary: #0a0a1a;
-  --bg-secondary: #0f0f23;
-  --bg-tertiary: #141432;
-  --surface-1: rgba(255, 255, 255, 0.03);
-  --surface-2: rgba(255, 255, 255, 0.06);
-  --surface-3: rgba(255, 255, 255, 0.09);
-  --surface-hover: rgba(255, 255, 255, 0.08);
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0c;
+  --bg-tertiary: #121216;
+  --surface-1: rgba(255, 255, 255, 0.02);
+  --surface-2: rgba(255, 255, 255, 0.05);
+  --surface-3: rgba(255, 255, 255, 0.08);
+  --surface-hover: rgba(255, 255, 255, 0.07);
 
   /* Accent Colors */
-  --accent-primary: #6c5ce7;
-  --accent-primary-rgb: 108, 92, 231;
-  --accent-secondary: #00cec9;
-  --accent-secondary-rgb: 0, 206, 201;
+  --accent-primary: #D80000;
+  --accent-primary-rgb: 216, 0, 0;
+  --accent-secondary: #ff3f34;
+  --accent-secondary-rgb: 255, 63, 52;
   --accent-tertiary: #fd79a8;
   --accent-tertiary-rgb: 253, 121, 168;
   --accent-warning: #fdcb6e;
@@ -29,31 +29,31 @@
   --accent-success-rgb: 0, 184, 148;
 
   /* Gradient */
-  --gradient-primary: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
-  --gradient-secondary: linear-gradient(135deg, #00cec9 0%, #81ecec 100%);
-  --gradient-accent: linear-gradient(135deg, #6c5ce7 0%, #00cec9 50%, #fd79a8 100%);
-  --gradient-bg: radial-gradient(ellipse at 20% 50%, rgba(108, 92, 231, 0.08) 0%, transparent 50%),
-                 radial-gradient(ellipse at 80% 20%, rgba(0, 206, 201, 0.06) 0%, transparent 50%),
-                 radial-gradient(ellipse at 40% 80%, rgba(253, 121, 168, 0.04) 0%, transparent 50%);
+  --gradient-primary: linear-gradient(135deg, #D80000 0%, #ff3f34 100%);
+  --gradient-secondary: linear-gradient(135deg, #ff3f34 0%, #ff7979 100%);
+  --gradient-accent: linear-gradient(135deg, #D80000 0%, #ff3f34 50%, #ffffff 100%);
+  --gradient-bg: radial-gradient(ellipse at 20% 50%, rgba(216, 0, 0, 0.07) 0%, transparent 50%),
+                 radial-gradient(ellipse at 80% 20%, rgba(255, 63, 52, 0.04) 0%, transparent 50%),
+                 radial-gradient(ellipse at 40% 80%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
 
   /* Text Colors */
   --text-primary: #e8e8f0;
   --text-secondary: rgba(232, 232, 240, 0.65);
   --text-tertiary: rgba(232, 232, 240, 0.4);
-  --text-inverse: #0a0a1a;
+  --text-inverse: #000000;
 
   /* Border */
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-default: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.18);
-  --border-accent: rgba(108, 92, 231, 0.4);
+  --border-accent: rgba(216, 0, 0, 0.3);
 
   /* Shadows */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(108, 92, 231, 0.15);
-  --shadow-glow-accent: 0 0 30px rgba(108, 92, 231, 0.25);
+  --shadow-glow: 0 0 20px rgba(216, 0, 0, 0.15);
+  --shadow-glow-accent: 0 0 30px rgba(216, 0, 0, 0.25);
 
   /* Spacing */
   --space-xs: 4px;
@@ -198,9 +198,10 @@ img {
 
 /* ── Typography ───────────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
 }
 
 h1 { font-size: var(--font-4xl); }
@@ -249,12 +250,12 @@ h4 { font-size: var(--font-xl); }
 .btn-primary {
   background: var(--gradient-primary);
   color: #fff;
-  border-color: rgba(108, 92, 231, 0.3);
-  box-shadow: 0 2px 12px rgba(108, 92, 231, 0.25);
+  border-color: rgba(var(--accent-primary-rgb), 0.3);
+  box-shadow: 0 2px 12px rgba(var(--accent-primary-rgb), 0.25);
 }
 
 .btn-primary:hover {
-  box-shadow: 0 4px 20px rgba(108, 92, 231, 0.4);
+  box-shadow: 0 4px 20px rgba(var(--accent-primary-rgb), 0.4);
   transform: translateY(-1px);
 }
 
