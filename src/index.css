@@ -969,3 +969,72 @@ tbody tr:hover {
     padding: var(--space-sm);
   }
 }
+
+/* ── HTML5 QR Scanner Premium Overrides ───────────────────── */
+#qr-reader {
+  border: none !important;
+  background: transparent !important;
+}
+
+#qr-reader img {
+  display: none !important;
+}
+
+/* Hide the "Scan an Image File" option */
+#qr-reader__filescan_input,
+#qr-reader__header_message,
+#qr-reader span[style*="font-size:small"],
+#qr-reader__status_span {
+  display: none !important;
+}
+
+#qr-reader__dashboard_section_swaplink {
+  display: none !important;
+}
+
+#qr-reader button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: 10px 20px;
+  font-family: var(--font-family);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  line-height: 1;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background: var(--gradient-primary);
+  color: #ffffff;
+  transition: all var(--transition-base);
+  margin-top: 12px;
+  border-color: rgba(216, 0, 0, 0.2);
+}
+
+#qr-reader button:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 12px rgba(216, 0, 0, 0.25);
+  filter: brightness(1.1);
+}
+
+#qr-reader button:active {
+  transform: scale(0.97);
+}
+
+#qr-reader select {
+  padding: 10px 14px;
+  font-family: var(--font-family);
+  font-size: var(--font-sm);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  outline: none;
+  margin: 12px 0;
+  width: 100%;
+}
+
+#qr-reader select:focus {
+  border-color: var(--accent-primary);
+}

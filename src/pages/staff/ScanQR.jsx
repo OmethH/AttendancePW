@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
 import { useAuth } from '../../contexts/AuthContext';
 import { recordAttendanceWithLocation } from '../../utils/qrTokenUtils';
+import { LayoutDashboard, Camera, RefreshCw } from 'lucide-react';
 
 export default function ScanQR() {
   const [result, setResult] = useState(null); // { success, type, message }
@@ -37,6 +38,7 @@ export default function ScanQR() {
         aspectRatio: 1,
         showTorchButtonIfSupported: true,
         showZoomSliderIfSupported: true,
+        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
       },
       false
     );
@@ -294,14 +296,16 @@ export default function ScanQR() {
                 onClick={handleScanAgain}
                 id="scan-again-btn"
               >
-                📷 Scan Again
+                <RefreshCw size={18} />
+                Scan Again
               </button>
               <button
                 className="btn btn-primary"
                 onClick={() => navigate('/staff')}
                 id="go-dashboard-btn"
               >
-                📊 My Dashboard
+                <LayoutDashboard size={18} />
+                My Dashboard
               </button>
             </div>
           </div>
