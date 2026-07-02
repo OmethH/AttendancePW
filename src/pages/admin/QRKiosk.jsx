@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
+import { Settings, ArrowLeft, MapPin, ChevronDown } from 'lucide-react';
 import {
   collection,
   addDoc,
@@ -19,6 +20,7 @@ export default function QRKiosk() {
   const [offices, setOffices] = useState([]);
   const [selectedOffice, setSelectedOffice] = useState('');
   const [qrPayload, setQrPayload] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   
   // Office management state
   const [showManager, setShowManager] = useState(false);
@@ -27,6 +29,18 @@ export default function QRKiosk() {
   const [toast, setToast] = useState(null);
 
   const containerRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Subscribe to offices list in Firestore
   useEffect(() => {
@@ -180,21 +194,36 @@ export default function QRKiosk() {
           border: '1px solid var(--border-subtle)',
         }}
       >
-        <div className="input-group" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
-          <label htmlFor="kiosk-office-select" style={{ whiteSpace: 'nowrap', fontSize: 'var(--font-sm)' }}>Location:</label>
-          <select
+        <div className="kiosk-dropdown" ref={dropdownRef}>
+          <button
+            type="button"
+            className={`kiosk-dropdown-trigger${dropdownOpen ? ' open' : ''}`}
+            onClick={() => setDropdownOpen(!dropdownOpen)}
             id="kiosk-office-select"
-            className="input"
-            value={selectedOffice}
-            onChange={(e) => setSelectedOffice(e.target.value)}
-            style={{ padding: '6px 12px', fontSize: 'var(--font-xs)', width: '200px' }}
           >
-            {offices.map((o) => (
-              <option key={o.id} value={o.name}>
-                {o.name}
-              </option>
-            ))}
-          </select>
+            <MapPin size={14} className="kiosk-select-icon" />
+            <span className="kiosk-dropdown-value">{selectedOffice || 'Select location…'}</span>
+            <ChevronDown size={14} className="kiosk-select-chevron" />
+          </button>
+          {dropdownOpen && (
+            <ul className="kiosk-dropdown-list">
+              {offices.map((o, i) => (
+                <li
+                  key={o.id}
+                  className={`kiosk-dropdown-item${selectedOffice === o.name ? ' active' : ''}`}
+                  style={{ animationDelay: `${i * 25}ms` }}
+                  onClick={() => {
+                    setSelectedOffice(o.name);
+                    setDropdownOpen(false);
+                  }}
+                >
+                  <MapPin size={12} />
+                  <span>{o.name}</span>
+                  {selectedOffice === o.name && <span className="kiosk-dropdown-check">✓</span>}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <button
@@ -202,7 +231,8 @@ export default function QRKiosk() {
           onClick={() => setShowManager(!showManager)}
           id="manage-offices-btn"
         >
-          ⚙️ Manage
+          <Settings size={16} />
+          Manage
         </button>
 
         <button
@@ -210,7 +240,8 @@ export default function QRKiosk() {
           onClick={() => navigate('/admin')}
           id="kiosk-back-btn"
         >
-          ← Back
+          <ArrowLeft size={16} />
+          Back
         </button>
       </div>
 

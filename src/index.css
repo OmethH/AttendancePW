@@ -134,6 +134,7 @@ body::before {
   min-height: 100vh;
 }
 
+
 a {
   color: var(--accent-primary);
   text-decoration: none;
@@ -301,6 +302,14 @@ h4 { font-size: var(--font-xl); }
 .btn-ghost:hover {
   background: var(--surface-1);
   color: var(--text-primary);
+}
+
+#navbar-logout-btn:hover,
+#logout-pending-btn:hover {
+  background: rgba(255, 107, 107, 0.12);
+  color: var(--accent-danger);
+  border-color: rgba(255, 107, 107, 0.25);
+  box-shadow: 0 0 12px rgba(255, 107, 107, 0.15);
 }
 
 .btn-sm {
@@ -597,7 +606,15 @@ tbody tr:hover {
 }
 
 .auth-footer a {
+  color: var(--accent-primary);
   font-weight: 600;
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+.auth-footer a:hover {
+  color: var(--accent-secondary) !important;
+  text-decoration: underline;
 }
 
 .auth-error {
@@ -1037,4 +1054,219 @@ tbody tr:hover {
 
 #qr-reader select:focus {
   border-color: var(--accent-primary);
+}
+
+/* ── View on Map Button ────────────────────────────────────── */
+.btn-map {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 4px 10px;
+  font-family: var(--font-family);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn-map:hover {
+  background: rgba(255, 107, 107, 0.12);
+  color: var(--accent-danger);
+  border-color: rgba(255, 107, 107, 0.25);
+  box-shadow: 0 0 10px rgba(255, 107, 107, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-map:active {
+  transform: scale(0.97);
+}
+
+/* ── Kiosk Custom Dropdown ────────────────────────────────── */
+.kiosk-dropdown {
+  position: relative;
+  z-index: 20;
+}
+
+.kiosk-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  appearance: none;
+  background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface-1) 100%);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 8px 12px;
+  min-width: 200px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  outline: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.kiosk-dropdown-trigger .kiosk-select-icon {
+  color: var(--accent-primary);
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(var(--accent-primary-rgb), 0.4));
+  transition: filter var(--transition-fast);
+}
+
+.kiosk-dropdown-trigger .kiosk-select-chevron {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  margin-left: auto;
+  transition: transform var(--transition-base), color var(--transition-fast);
+}
+
+.kiosk-dropdown-trigger.open .kiosk-select-chevron {
+  transform: rotate(180deg);
+  color: var(--accent-primary);
+}
+
+.kiosk-dropdown-value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kiosk-dropdown-trigger:hover {
+  background: linear-gradient(135deg, var(--surface-3) 0%, var(--surface-2) 100%);
+  border-color: var(--border-strong);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.kiosk-dropdown-trigger.open {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.12),
+              0 4px 16px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, var(--surface-3) 0%, var(--surface-2) 100%);
+}
+
+.kiosk-dropdown-trigger.open .kiosk-select-icon {
+  filter: drop-shadow(0 0 6px rgba(var(--accent-primary-rgb), 0.6));
+}
+
+/* ── Dropdown List ──── */
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dropdownItemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.kiosk-dropdown-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  min-width: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  background: rgba(15, 15, 30, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45),
+              0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  animation: dropdownSlideIn 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.kiosk-dropdown-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.kiosk-dropdown-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kiosk-dropdown-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+}
+
+.kiosk-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  animation: dropdownItemFadeIn 200ms ease-out both;
+}
+
+.kiosk-dropdown-item svg {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  transition: color var(--transition-fast);
+}
+
+.kiosk-dropdown-item:hover {
+  background: rgba(var(--accent-primary-rgb), 0.08);
+  color: var(--text-primary);
+}
+
+.kiosk-dropdown-item:hover svg {
+  color: var(--accent-primary);
+}
+
+.kiosk-dropdown-item.active {
+  background: rgba(var(--accent-primary-rgb), 0.12);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.kiosk-dropdown-item.active svg {
+  color: var(--accent-primary);
+  filter: drop-shadow(0 0 3px rgba(var(--accent-primary-rgb), 0.4));
+}
+
+.kiosk-dropdown-check {
+  margin-left: auto;
+  color: var(--accent-primary);
+  font-weight: 700;
+  font-size: var(--font-sm);
+  filter: drop-shadow(0 0 4px rgba(var(--accent-primary-rgb), 0.5));
+}
+
+#manage-offices-btn:hover,
+#kiosk-back-btn:hover {
+  background: rgba(255, 107, 107, 0.12) !important;
+  color: var(--accent-danger) !important;
+  border-color: rgba(255, 107, 107, 0.25) !important;
+  box-shadow: 0 0 12px rgba(255, 107, 107, 0.15) !important;
 }

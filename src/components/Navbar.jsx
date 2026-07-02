@@ -42,7 +42,7 @@ export default function Navbar({ onMenuClick }) {
             {userProfile?.displayName || 'User'}
           </div>
           <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)' }}>
-            {isAdmin ? 'Administrator' : 'Staff'}
+            {isAdmin ? 'Administrator' : (userProfile?.department || 'Staff')}
           </div>
         </div>
 

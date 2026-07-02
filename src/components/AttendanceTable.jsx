@@ -109,8 +109,7 @@ export default function AttendanceTable({ records, showUser = true, pageSize = 1
                       href={`https://www.google.com/maps/search/?api=1&query=${record.location.latitude},${record.location.longitude}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn btn-secondary btn-sm"
-                      style={{ padding: '2px 8px', fontSize: 'var(--font-xs)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      className="btn-map"
                     >
                       🌍 View on Map
                     </a>

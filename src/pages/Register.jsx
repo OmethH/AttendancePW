@@ -102,7 +102,7 @@ export default function Register() {
       <div className="auth-card glass-strong animate-scale-in">
         <div className="auth-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <img
-            src="/logo.jpg"
+            src="/logo.png"
             alt="Power World Logo"
             style={{
               maxHeight: '60px',
