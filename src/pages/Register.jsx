@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Register() {
@@ -15,6 +15,13 @@ export default function Register() {
   const [success, setSuccess] = useState(false);
   const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('error') === 'google-register-first') {
+      setError('Please select a department first, then click "Register with Google" to create your account.');
+    }
+  }, [searchParams]);
 
   async function handleGoogleRegister() {
     setError('');

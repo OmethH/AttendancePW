@@ -18,7 +18,11 @@ export default function Login() {
       navigate('/');
     } catch (err) {
       console.error(err);
-      setError('Google Sign-In failed. Please try again.');
+      if (err.code === 'auth/new-user') {
+        navigate('/register?error=google-register-first');
+      } else {
+        setError('Google Sign-In failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

@@ -53,10 +53,14 @@ export function AuthProvider({ children }) {
     const docRef = doc(db, 'users', user.uid);
     const snap = await getDoc(docRef);
     if (!snap.exists()) {
+      if (!department) {
+        await signOut(auth);
+        throw { code: 'auth/new-user', message: 'User profile does not exist. Please register first.' };
+      }
       const profile = {
         email: user.email,
         displayName: user.displayName || 'Google User',
-        department: department || 'Other',
+        department: department,
         role: 'staff',
         status: 'pending',
         createdAt: serverTimestamp(),
