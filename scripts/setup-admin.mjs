@@ -35,8 +35,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const ADMIN_EMAIL = 'admin@attendancepw.com';
-const ADMIN_PASSWORD = 'admin@123';
+const ADMIN_EMAIL = 'admin@pw.com';
+const ADMIN_PASSWORD = 'admin123';
 const ADMIN_DISPLAY_NAME = 'Admin';
 
 const DEMOTE_EMAIL = 'rakithalakvindu@gmail.com';

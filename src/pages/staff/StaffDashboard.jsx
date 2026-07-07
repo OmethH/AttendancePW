@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { QrCode } from 'lucide-react';
 import {
   collection,
   query,
@@ -14,6 +16,7 @@ import AttendanceTable from '../../components/AttendanceTable';
 
 export default function StaffDashboard() {
   const { currentUser, userProfile } = useAuth();
+  const navigate = useNavigate();
   const [todayStatus, setTodayStatus] = useState(null);
   const [records, setRecords] = useState([]);
   const [stats, setStats] = useState({ thisWeek: 0, thisMonth: 0, totalHoursToday: '—' });
@@ -124,45 +127,51 @@ export default function StaffDashboard() {
         <p>Your attendance summary and history</p>
       </div>
 
-      {/* Today's Status */}
+      {/* Quick Actions & Status Grid */}
       <div
-        className="glass animate-fade-in-up"
         style={{
-          padding: 'var(--space-lg)',
-          marginBottom: 'var(--space-xl)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: 'var(--space-md)',
+          marginBottom: 'var(--space-xl)',
         }}
       >
-        <div>
-          <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+        {/* Today's Status */}
+        <div
+          className="glass animate-fade-in-up"
+          style={{
+            padding: 'var(--space-lg)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            minHeight: '140px',
+          }}
+        >
+          <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)', marginBottom: '8px' }}>
             Today's Status
           </div>
-          {todayStatus ? (
-            <div className="flex items-center gap-sm">
-              <span
-                className={`badge ${
-                  todayStatus.type === 'check-in' ? 'badge-success' : 'badge-warning'
-                }`}
-                style={{ fontSize: 'var(--font-sm)', padding: '6px 14px' }}
-              >
-                {todayStatus.type === 'check-in' ? '🟢 Checked In' : '🟡 Checked Out'}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+            {todayStatus ? (
+              <div className="flex items-center gap-sm">
+                <span
+                  className={`badge ${
+                    todayStatus.type === 'check-in' ? 'badge-success' : 'badge-warning'
+                  }`}
+                  style={{ fontSize: 'var(--font-sm)', padding: '6px 14px' }}
+                >
+                  {todayStatus.type === 'check-in' ? '🟢 Checked In' : '🟡 Checked Out'}
+                </span>
+                <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-sm)' }}>
+                  at {todayStatus.time}
+                </span>
+              </div>
+            ) : (
+              <span className="badge badge-neutral" style={{ fontSize: 'var(--font-sm)', padding: '6px 14px' }}>
+                ⚪ Not checked in yet
               </span>
-              <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-sm)' }}>
-                at {todayStatus.time}
-              </span>
-            </div>
-          ) : (
-            <span className="badge badge-neutral" style={{ fontSize: 'var(--font-sm)', padding: '6px 14px' }}>
-              ⚪ Not checked in yet
-            </span>
-          )}
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)' }}>
+            )}
+          </div>
+          <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)', marginTop: '12px' }}>
             {new Date().toLocaleDateString('en', {
               weekday: 'long',
               month: 'long',
@@ -170,6 +179,46 @@ export default function StaffDashboard() {
               year: 'numeric',
             })}
           </div>
+        </div>
+
+        {/* Quick Scan QR Card */}
+        <div
+          className="glass animate-fade-in-up"
+          style={{
+            padding: 'var(--space-lg)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 'var(--space-md)',
+            border: '1px dashed var(--border-accent)',
+            animationDelay: '100ms',
+            minHeight: '140px',
+          }}
+        >
+          <div>
+            <h4 style={{ fontSize: 'var(--font-md)', fontWeight: 600, marginBottom: '6px', color: 'var(--text-primary)' }}>
+              Mark Your Attendance
+            </h4>
+            <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)', lineHeight: '1.4', maxWidth: '240px' }}>
+              Scan the checkpoint QR code to record your check-in or check-out details.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/staff/scan')}
+            className="btn btn-primary"
+            style={{
+              padding: '12px 20px',
+              fontSize: 'var(--font-sm)',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 15px rgba(216, 0, 0, 0.3)',
+            }}
+          >
+            <QrCode size={18} />
+            Scan QR
+          </button>
         </div>
       </div>
 
