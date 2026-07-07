@@ -170,6 +170,7 @@ export default function Register() {
               <option value="Operations">Operations</option>
               <option value="IT">IT</option>
               <option value="Business">Business</option>
+              <option value="Trainer">Trainer</option>
             </select>
           </div>
 

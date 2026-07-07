@@ -30,6 +30,7 @@ const DEPARTMENTS = [
   { value: 'Operations', label: 'Operations' },
   { value: 'IT', label: 'IT' },
   { value: 'Business', label: 'Business' },
+  { value: 'Trainer', label: 'Trainer' },
 ];
 
 export default function AttendanceReports() {
