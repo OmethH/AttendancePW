@@ -226,12 +226,22 @@ export default function QRKiosk() {
       doc.setTextColor(216, 0, 0); // brand red (#D80000)
       doc.text(officeName.toUpperCase(), 105, 82.5, { align: 'center' });
       
-      // Mask the "QR CODE" placeholder text in the center
-      doc.setFillColor(10, 10, 15); // dark black/blue
-      doc.roundedRect(48, 96, 114, 114, 8, 8, 'F');
+      // Mask the "QR CODE" placeholder text in the center with matching dark color
+      doc.setFillColor(10, 10, 15); // dark black/blue to match the template's black square
+      doc.roundedRect(48, 98, 114, 114, 8, 8, 'F');
       
-      // Draw the QR code inside the black square, centered with a nice 4mm border
-      doc.addImage(qrDataUrl, 'PNG', 52, 100, 106, 106);
+      // Draw a white background square that fits the black border area (leaving a balanced 8mm border)
+      const qrBgSize = 98; // 98mm width/height
+      const qrBgX = 105 - (qrBgSize / 2); // 56
+      const qrBgY = 155 - (qrBgSize / 2); // 106
+      doc.setFillColor(255, 255, 255); // solid white
+      doc.roundedRect(qrBgX, qrBgY, qrBgSize, qrBgSize, 6, 6, 'F');
+      
+      // Draw the QR code inside the white square, centered with a nice border
+      const qrSize = 90; // 90mm
+      const qrX = 105 - (qrSize / 2); // 60
+      const qrY = 155 - (qrSize / 2); // 110
+      doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
       
       // Save PDF
       doc.save(`PowerWorld_QR_${officeName.replace(/\s+/g, '_')}.pdf`);
