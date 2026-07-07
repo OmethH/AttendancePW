@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Settings, ArrowLeft, MapPin, ChevronDown } from 'lucide-react';
+import jsPDF from 'jspdf';
 import {
   collection,
   addDoc,
@@ -141,33 +142,110 @@ export default function QRKiosk() {
     setTimeout(() => setToast(null), 3000);
   }
 
-  const downloadQR = (officeName) => {
-    const svg = document.getElementById(`qr-svg-${officeName}`);
-    if (!svg) return;
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const svgUrl = URL.createObjectURL(svgBlob);
-    const downloadLink = document.createElement('a');
-    downloadLink.href = svgUrl;
-    downloadLink.download = `QR_${officeName.replace(/\s+/g, '_')}.svg`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
+  const getQRCodePngDataUrl = (officeName) => {
+    return new Promise((resolve) => {
+      const svg = document.getElementById(`qr-svg-${officeName}`) || document.getElementById('kiosk-qr-svg');
+      if (!svg) {
+        resolve(null);
+        return;
+      }
+      
+      const svgString = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 512, 512);
+        ctx.drawImage(img, 0, 0, 512, 512);
+        URL.revokeObjectURL(svgUrl);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(svgUrl);
+        resolve(null);
+      };
+      img.src = svgUrl;
+    });
+  };
+
+  const getTemplateDataUrl = () => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => resolve(null);
+      img.src = '/qr-template.png';
+    });
+  };
+
+  const downloadQR = async (officeName) => {
+    if (!officeName) return;
+    showToast('Generating PDF...', 'info');
+    
+    try {
+      const qrDataUrl = await getQRCodePngDataUrl(officeName);
+      if (!qrDataUrl) {
+        showToast('Failed to generate QR code.', 'error');
+        return;
+      }
+      
+      const templateDataUrl = await getTemplateDataUrl();
+      if (!templateDataUrl) {
+        showToast('Failed to load flyer template.', 'error');
+        return;
+      }
+      
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      // Add flyer template as full-page background
+      doc.addImage(templateDataUrl, 'PNG', 0, 0, 210, 297);
+      
+      // Mask the original "LOCATION" text inside the capsule badge
+      doc.setFillColor(15, 15, 20); // matching the template's dark color
+      doc.roundedRect(73, 76.5, 64, 9, 4, 4, 'F');
+      
+      // Write the actual office name inside the capsule
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(216, 0, 0); // brand red (#D80000)
+      doc.text(officeName.toUpperCase(), 105, 82.5, { align: 'center' });
+      
+      // Mask the "QR CODE" placeholder text in the center
+      doc.setFillColor(10, 10, 15); // dark black/blue
+      doc.roundedRect(48, 96, 114, 114, 8, 8, 'F');
+      
+      // Draw the QR code inside the black square, centered with a nice 4mm border
+      doc.addImage(qrDataUrl, 'PNG', 52, 100, 106, 106);
+      
+      // Save PDF
+      doc.save(`PowerWorld_QR_${officeName.replace(/\s+/g, '_')}.pdf`);
+      showToast('PDF downloaded!', 'success');
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      showToast('Error generating PDF.', 'error');
+    }
   };
 
   const downloadKioskQR = () => {
-    if (!selectedOffice) return;
-    const svg = document.getElementById('kiosk-qr-svg');
-    if (!svg) return;
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const svgUrl = URL.createObjectURL(svgBlob);
-    const downloadLink = document.createElement('a');
-    downloadLink.href = svgUrl;
-    downloadLink.download = `Kiosk_QR_${selectedOffice.replace(/\s+/g, '_')}.svg`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
+    if (selectedOffice) {
+      downloadQR(selectedOffice);
+    }
   };
 
   return (
