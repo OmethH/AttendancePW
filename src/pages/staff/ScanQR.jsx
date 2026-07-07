@@ -291,14 +291,16 @@ export default function ScanQR() {
             </div>
 
             <div className="flex gap-sm justify-center" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button
-                className="btn btn-secondary"
-                onClick={handleScanAgain}
-                id="scan-again-btn"
-              >
-                <RefreshCw size={18} />
-                Scan Again
-              </button>
+              {!(result.success && result.type === 'check-out') && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleScanAgain}
+                  id="scan-again-btn"
+                >
+                  <RefreshCw size={18} />
+                  Scan Again
+                </button>
+              )}
               <button
                 className="btn btn-primary"
                 onClick={() => navigate('/staff')}
