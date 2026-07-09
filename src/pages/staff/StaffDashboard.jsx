@@ -10,7 +10,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { formatDate } from '../../utils/qrTokenUtils';
+import { formatDate, calculateDailyMs } from '../../utils/qrTokenUtils';
 import StatCard from '../../components/StatCard';
 import AttendanceTable from '../../components/AttendanceTable';
 
@@ -50,9 +50,8 @@ export default function StaffDashboard() {
       // Calculate daily hours for UI
       const dateRecordsMap = {};
       allRecords.forEach(r => {
-        if (!dateRecordsMap[r.date]) dateRecordsMap[r.date] = { checkIns: [], checkOuts: [] };
-        if (r.type === 'check-in') dateRecordsMap[r.date].checkIns.push(r);
-        else if (r.type === 'check-out') dateRecordsMap[r.date].checkOuts.push(r);
+        if (!dateRecordsMap[r.date]) dateRecordsMap[r.date] = [];
+        dateRecordsMap[r.date].push(r);
       });
 
       const seenDate = new Set();
@@ -60,16 +59,12 @@ export default function StaffDashboard() {
         let dailyHours = '';
         if (!seenDate.has(r.date)) {
           seenDate.add(r.date);
-          const dayInfo = dateRecordsMap[r.date];
-          if (dayInfo.checkIns.length > 0 && dayInfo.checkOuts.length > 0) {
-            const firstCheckIn = dayInfo.checkIns[dayInfo.checkIns.length - 1];
-            const lastCheckOut = dayInfo.checkOuts[0];
-            if (firstCheckIn.timestamp && lastCheckOut.timestamp) {
-              const diffMs = (lastCheckOut.timestamp.seconds - firstCheckIn.timestamp.seconds) * 1000;
-              const dHours = Math.floor(diffMs / 3600000);
-              const dMinutes = Math.floor((diffMs % 3600000) / 60000);
-              dailyHours = `${dHours}h ${dMinutes}m`;
-            }
+          const dayRecords = dateRecordsMap[r.date];
+          const diffMs = calculateDailyMs(dayRecords);
+          if (diffMs > 0) {
+            const dHours = Math.floor(diffMs / 3600000);
+            const dMinutes = Math.floor((diffMs % 3600000) / 60000);
+            dailyHours = `${dHours}h ${dMinutes}m`;
           }
         }
         return { ...r, dailyHours };
@@ -90,22 +85,13 @@ export default function StaffDashboard() {
         });
 
         // Calculate hours today
-        const checkIns = todayRecords.filter((r) => r.type === 'check-in');
-        const checkOuts = todayRecords.filter((r) => r.type === 'check-out');
-        if (checkIns.length > 0 && checkOuts.length > 0) {
-          const firstCheckIn = checkIns[checkIns.length - 1];
-          const lastCheckOut = checkOuts[0];
-          if (firstCheckIn.timestamp && lastCheckOut.timestamp) {
-            const diffMs =
-              (lastCheckOut.timestamp.seconds - firstCheckIn.timestamp.seconds) * 1000;
-            const hours = Math.floor(diffMs / 3600000);
-            const minutes = Math.floor((diffMs % 3600000) / 60000);
-            setStats((prev) => ({
-              ...prev,
-              totalHoursToday: `${hours}h ${minutes}m`,
-            }));
-          }
-        }
+        const diffMs = calculateDailyMs(todayRecords);
+        const hours = Math.floor(diffMs / 3600000);
+        const minutes = Math.floor((diffMs % 3600000) / 60000);
+        setStats((prev) => ({
+          ...prev,
+          totalHoursToday: diffMs > 0 ? `${hours}h ${minutes}m` : '0h 0m',
+        }));
       }
 
       // This week count (unique days with check-in)
@@ -133,17 +119,7 @@ export default function StaffDashboard() {
       
       daysInMonth.forEach(day => {
         const dayRecords = monthRecords.filter(r => r.date === day);
-        const checkIns = dayRecords.filter(r => r.type === 'check-in');
-        const checkOuts = dayRecords.filter(r => r.type === 'check-out');
-        
-        if (checkIns.length > 0 && checkOuts.length > 0) {
-          const firstCheckIn = checkIns[checkIns.length - 1];
-          const lastCheckOut = checkOuts[0];
-          if (firstCheckIn.timestamp && lastCheckOut.timestamp) {
-            const diffMs = (lastCheckOut.timestamp.seconds - firstCheckIn.timestamp.seconds) * 1000;
-            totalMsThisMonth += diffMs;
-          }
-        }
+        totalMsThisMonth += calculateDailyMs(dayRecords);
       });
       
       const monthHours = Math.floor(totalMsThisMonth / 3600000);

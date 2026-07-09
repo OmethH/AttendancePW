@@ -105,3 +105,31 @@ export function buildStaticQRPayload(officeId = 'Main Office') {
   const baseUrl = window.location.origin;
   return `${baseUrl}/scan?office=${encodeURIComponent(officeId)}`;
 }
+
+/**
+ * Calculate total milliseconds worked for a day based on consecutive check-in and check-out pairs.
+ * @param {Array} dayRecords - Array of attendance records for a specific day
+ */
+export function calculateDailyMs(dayRecords) {
+  // Sort records ASC by timestamp
+  const sorted = [...dayRecords].sort((a, b) => {
+    const tA = a.timestamp?.seconds || 0;
+    const tB = b.timestamp?.seconds || 0;
+    return tA - tB;
+  });
+
+  let totalMs = 0;
+  let lastCheckInTime = null;
+
+  for (const r of sorted) {
+    if (r.type === 'check-in') {
+      lastCheckInTime = r.timestamp?.seconds;
+    } else if (r.type === 'check-out') {
+      if (lastCheckInTime && r.timestamp?.seconds >= lastCheckInTime) {
+        totalMs += (r.timestamp.seconds - lastCheckInTime) * 1000;
+        lastCheckInTime = null; // consume the check-in
+      }
+    }
+  }
+  return totalMs;
+}

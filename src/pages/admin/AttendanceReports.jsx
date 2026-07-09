@@ -8,6 +8,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import AttendanceTable from '../../components/AttendanceTable';
+import { calculateDailyMs } from '../../utils/qrTokenUtils';
 import { exportToCSV } from '../../utils/exportUtils';
 import {
   BarChart,
@@ -119,13 +120,8 @@ export default function AttendanceReports() {
         const r = { id: d.id, ...d.data() };
         if (!r.userId || !r.date) return;
         if (!userDateRecords[r.userId]) userDateRecords[r.userId] = {};
-        if (!userDateRecords[r.userId][r.date]) userDateRecords[r.userId][r.date] = { checkIns: [], checkOuts: [] };
-        
-        if (r.type === 'check-in') {
-          userDateRecords[r.userId][r.date].checkIns.push(r);
-        } else if (r.type === 'check-out') {
-          userDateRecords[r.userId][r.date].checkOuts.push(r);
-        }
+        if (!userDateRecords[r.userId][r.date]) userDateRecords[r.userId][r.date] = [];
+        userDateRecords[r.userId][r.date].push(r);
       });
 
       const userMonthMs = {};
@@ -133,17 +129,14 @@ export default function AttendanceReports() {
         userMonthMs[userId] = {};
         for (const dateStr in userDateRecords[userId]) {
            const monthStr = dateStr.slice(0, 7);
-           const dayInfo = userDateRecords[userId][dateStr];
-           if (dayInfo.checkIns.length > 0 && dayInfo.checkOuts.length > 0) {
-             const firstCheckIn = dayInfo.checkIns[dayInfo.checkIns.length - 1]; // sorted desc
-             const lastCheckOut = dayInfo.checkOuts[0];
-             if (firstCheckIn.timestamp && lastCheckOut.timestamp) {
-               const diffMs = (lastCheckOut.timestamp.seconds - firstCheckIn.timestamp.seconds) * 1000;
-               dayInfo.diffMs = diffMs;
-               if (!userMonthMs[userId][monthStr]) userMonthMs[userId][monthStr] = 0;
-               userMonthMs[userId][monthStr] += diffMs;
-             }
-           }
+           const dayRecords = userDateRecords[userId][dateStr];
+           const diffMs = calculateDailyMs(dayRecords);
+           
+           // Attach daily diffMs directly onto the records array for quick lookup below
+           dayRecords.diffMs = diffMs;
+           
+           if (!userMonthMs[userId][monthStr]) userMonthMs[userId][monthStr] = 0;
+           userMonthMs[userId][monthStr] += diffMs;
         }
       }
 
