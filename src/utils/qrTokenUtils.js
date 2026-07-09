@@ -7,33 +7,42 @@ import {
   orderBy,
   limit,
   serverTimestamp,
+  doc,
+  updateDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
 /**
  * Record attendance at a static office location with optional GPS coordinates.
- * Returns { success, type, message }
+ * Returns { success, type, message, docId }
  */
-export async function recordAttendanceWithLocation(officeName, userId, userName, coords) {
+export async function recordAttendanceWithLocation(officeName, userId, userName, coords, replaceData = null) {
   try {
     const now = new Date();
     const today = formatDate(now);
 
-    // 1. Determine check-in or check-out based on last record today
-    const attendanceQuery = query(
-      collection(db, 'attendance'),
-      where('userId', '==', userId),
-      where('date', '==', today),
-      orderBy('timestamp', 'desc'),
-      limit(1)
-    );
-
-    const attendanceSnap = await getDocs(attendanceQuery);
     let type = 'check-in';
+    let docId = null;
 
-    if (!attendanceSnap.empty) {
-      const lastRecord = attendanceSnap.docs[0].data();
-      type = lastRecord.type === 'check-in' ? 'check-out' : 'check-in';
+    if (replaceData) {
+      type = replaceData.type;
+      docId = replaceData.docId;
+    } else {
+      // 1. Determine check-in or check-out based on last record today
+      const attendanceQuery = query(
+        collection(db, 'attendance'),
+        where('userId', '==', userId),
+        where('date', '==', today),
+        orderBy('timestamp', 'desc'),
+        limit(1)
+      );
+
+      const attendanceSnap = await getDocs(attendanceQuery);
+
+      if (!attendanceSnap.empty) {
+        const lastRecord = attendanceSnap.docs[0].data();
+        type = lastRecord.type === 'check-in' ? 'check-out' : 'check-in';
+      }
     }
 
     // 2. Build attendance record
@@ -55,11 +64,20 @@ export async function recordAttendanceWithLocation(officeName, userId, userName,
     }
 
     // 3. Save to Firestore
-    await addDoc(collection(db, 'attendance'), attendanceRecord);
+    if (docId) {
+      // Update existing record
+      const docRef = doc(db, 'attendance', docId);
+      await updateDoc(docRef, attendanceRecord);
+    } else {
+      // Create new record
+      const docRef = await addDoc(collection(db, 'attendance'), attendanceRecord);
+      docId = docRef.id;
+    }
 
     return {
       success: true,
       type,
+      docId,
       message: type === 'check-in'
         ? `Welcome, ${userName}! You are checked in at ${officeName}.`
         : `Goodbye, ${userName}! You are checked out from ${officeName}.`,

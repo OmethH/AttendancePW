@@ -28,19 +28,49 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   async function register(email, password, displayName, department) {
-    const { user } = await createUserWithEmailAndPassword(auth, email, password);
-    const profile = {
-      email,
-      displayName,
-      department,
-      role: 'staff',
-      status: 'pending',
-      createdAt: serverTimestamp(),
-      photoURL: '',
-    };
-    await setDoc(doc(db, 'users', user.uid), profile);
-    setUserProfile({ ...profile, uid: user.uid });
-    return user;
+    try {
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      const profile = {
+        email,
+        displayName,
+        department,
+        role: 'staff',
+        status: 'pending',
+        createdAt: serverTimestamp(),
+        photoURL: '',
+      };
+      await setDoc(doc(db, 'users', user.uid), profile);
+      setUserProfile({ ...profile, uid: user.uid });
+      return user;
+    } catch (error) {
+      if (error.code === 'auth/email-already-in-use') {
+        try {
+          const { user } = await signInWithEmailAndPassword(auth, email, password);
+          const docRef = doc(db, 'users', user.uid);
+          const snap = await getDoc(docRef);
+          
+          if (!snap.exists()) {
+            const profile = {
+              email,
+              displayName,
+              department,
+              role: 'staff',
+              status: 'pending',
+              createdAt: serverTimestamp(),
+              photoURL: '',
+            };
+            await setDoc(docRef, profile);
+            setUserProfile({ ...profile, uid: user.uid });
+            return user;
+          } else {
+            throw error;
+          }
+        } catch (loginError) {
+          throw error;
+        }
+      }
+      throw error;
+    }
   }
 
   async function login(email, password) {

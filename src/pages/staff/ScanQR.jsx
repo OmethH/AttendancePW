@@ -11,6 +11,7 @@ export default function ScanQR() {
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState('');
   const [userCoords, setUserCoords] = useState(null);
+  const [lastScanData, setLastScanData] = useState(null);
   
   const [searchParams] = useSearchParams();
   const { currentUser, userProfile } = useAuth();
@@ -140,9 +141,15 @@ export default function ScanQR() {
       officeName,
       currentUser.uid,
       userProfile.displayName || currentUser.email,
-      coords
+      coords,
+      lastScanData // Pass the previous scan data if this is a "Scan Again" action
     );
     setResult(res);
+    
+    // Store the document info so "Scan Again" can replace it
+    if (res.success && res.docId) {
+      setLastScanData({ docId: res.docId, type: res.type });
+    }
   }
 
   function handleScanAgain() {
@@ -291,16 +298,14 @@ export default function ScanQR() {
             </div>
 
             <div className="flex gap-sm justify-center" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
-              {!(result.success && result.type === 'check-out') && (
-                <button
-                  className="btn btn-secondary"
-                  onClick={handleScanAgain}
-                  id="scan-again-btn"
-                >
-                  <RefreshCw size={18} />
-                  Scan Again
-                </button>
-              )}
+              <button
+                className="btn btn-secondary"
+                onClick={handleScanAgain}
+                id="scan-again-btn"
+              >
+                <RefreshCw size={18} />
+                Scan Again
+              </button>
               <button
                 className="btn btn-primary"
                 onClick={() => navigate('/staff')}
