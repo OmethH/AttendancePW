@@ -83,6 +83,7 @@ export default function AttendanceTable({ records, showUser = true, pageSize = 1
               </th>
               <th>Office</th>
               <th>GPS Location</th>
+              <th>Daily Hrs</th>
             </tr>
           </thead>
           <tbody>
@@ -116,6 +117,9 @@ export default function AttendanceTable({ records, showUser = true, pageSize = 1
                   ) : (
                     <span style={{ color: 'var(--text-tertiary)', fontSize: 'var(--font-xs)' }}>No GPS</span>
                   )}
+                </td>
+                <td style={{ fontWeight: 600, color: 'var(--accent-warning)' }}>
+                  {record.dailyHours || ''}
                 </td>
               </tr>
             ))}

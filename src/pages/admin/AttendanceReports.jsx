@@ -113,6 +113,63 @@ export default function AttendanceReports() {
         data = data.filter((r) => r.office === filters.office);
       }
 
+      // Pre-calculate hours per user per month
+      const userDateRecords = {};
+      snap.docs.forEach((d) => {
+        const r = { id: d.id, ...d.data() };
+        if (!r.userId || !r.date) return;
+        if (!userDateRecords[r.userId]) userDateRecords[r.userId] = {};
+        if (!userDateRecords[r.userId][r.date]) userDateRecords[r.userId][r.date] = { checkIns: [], checkOuts: [] };
+        
+        if (r.type === 'check-in') {
+          userDateRecords[r.userId][r.date].checkIns.push(r);
+        } else if (r.type === 'check-out') {
+          userDateRecords[r.userId][r.date].checkOuts.push(r);
+        }
+      });
+
+      const userMonthMs = {};
+      for (const userId in userDateRecords) {
+        userMonthMs[userId] = {};
+        for (const dateStr in userDateRecords[userId]) {
+           const monthStr = dateStr.slice(0, 7);
+           const dayInfo = userDateRecords[userId][dateStr];
+           if (dayInfo.checkIns.length > 0 && dayInfo.checkOuts.length > 0) {
+             const firstCheckIn = dayInfo.checkIns[dayInfo.checkIns.length - 1]; // sorted desc
+             const lastCheckOut = dayInfo.checkOuts[0];
+             if (firstCheckIn.timestamp && lastCheckOut.timestamp) {
+               const diffMs = (lastCheckOut.timestamp.seconds - firstCheckIn.timestamp.seconds) * 1000;
+               dayInfo.diffMs = diffMs;
+               if (!userMonthMs[userId][monthStr]) userMonthMs[userId][monthStr] = 0;
+               userMonthMs[userId][monthStr] += diffMs;
+             }
+           }
+        }
+      }
+
+      const seenUserDate = new Set();
+      data = data.map(r => {
+        const monthStr = r.date.slice(0, 7);
+        const totalMs = userMonthMs[r.userId]?.[monthStr] || 0;
+        const monthHours = Math.floor(totalMs / 3600000);
+        const monthMinutes = Math.floor((totalMs % 3600000) / 60000);
+        const formattedMonthHours = totalMs > 0 ? `${monthHours}h ${monthMinutes}m` : '0h 0m';
+        
+        let dailyHours = '';
+        const userDateKey = `${r.userId}_${r.date}`;
+        if (!seenUserDate.has(userDateKey)) {
+           seenUserDate.add(userDateKey);
+           const dayMs = userDateRecords[r.userId]?.[r.date]?.diffMs || 0;
+           if (dayMs > 0) {
+             const dHours = Math.floor(dayMs / 3600000);
+             const dMinutes = Math.floor((dayMs % 3600000) / 60000);
+             dailyHours = `${dHours}h ${dMinutes}m`;
+           }
+        }
+
+        return { ...r, hoursThisMonth: formattedMonthHours, dailyHours };
+      });
+
       setRecords(data);
       buildChartData(data);
     } catch (error) {

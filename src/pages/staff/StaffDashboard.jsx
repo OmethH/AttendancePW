@@ -19,7 +19,7 @@ export default function StaffDashboard() {
   const navigate = useNavigate();
   const [todayStatus, setTodayStatus] = useState(null);
   const [records, setRecords] = useState([]);
-  const [stats, setStats] = useState({ thisWeek: 0, thisMonth: 0, totalHoursToday: '—' });
+  const [stats, setStats] = useState({ thisWeek: 0, thisMonth: 0, totalHoursToday: '—', totalHoursThisMonth: '—' });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,7 +45,36 @@ export default function StaffDashboard() {
         orderBy('timestamp', 'desc')
       );
       const snap = await getDocs(q);
-      const allRecords = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      let allRecords = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      // Calculate daily hours for UI
+      const dateRecordsMap = {};
+      allRecords.forEach(r => {
+        if (!dateRecordsMap[r.date]) dateRecordsMap[r.date] = { checkIns: [], checkOuts: [] };
+        if (r.type === 'check-in') dateRecordsMap[r.date].checkIns.push(r);
+        else if (r.type === 'check-out') dateRecordsMap[r.date].checkOuts.push(r);
+      });
+
+      const seenDate = new Set();
+      allRecords = allRecords.map(r => {
+        let dailyHours = '';
+        if (!seenDate.has(r.date)) {
+          seenDate.add(r.date);
+          const dayInfo = dateRecordsMap[r.date];
+          if (dayInfo.checkIns.length > 0 && dayInfo.checkOuts.length > 0) {
+            const firstCheckIn = dayInfo.checkIns[dayInfo.checkIns.length - 1];
+            const lastCheckOut = dayInfo.checkOuts[0];
+            if (firstCheckIn.timestamp && lastCheckOut.timestamp) {
+              const diffMs = (lastCheckOut.timestamp.seconds - firstCheckIn.timestamp.seconds) * 1000;
+              const dHours = Math.floor(diffMs / 3600000);
+              const dMinutes = Math.floor((diffMs % 3600000) / 60000);
+              dailyHours = `${dHours}h ${dMinutes}m`;
+            }
+          }
+        }
+        return { ...r, dailyHours };
+      });
+
       setRecords(allRecords);
 
       // Today's status
@@ -91,16 +120,41 @@ export default function StaffDashboard() {
 
       // This month count
       const monthStart = `${today.slice(0, 7)}-01`;
+      const monthRecords = allRecords.filter((r) => r.date >= monthStart);
+
       const thisMonthDays = new Set(
-        allRecords
-          .filter((r) => r.date >= monthStart && r.type === 'check-in')
+        monthRecords
+          .filter((r) => r.type === 'check-in')
           .map((r) => r.date)
       );
+
+      let totalMsThisMonth = 0;
+      const daysInMonth = Array.from(new Set(monthRecords.map(r => r.date)));
+      
+      daysInMonth.forEach(day => {
+        const dayRecords = monthRecords.filter(r => r.date === day);
+        const checkIns = dayRecords.filter(r => r.type === 'check-in');
+        const checkOuts = dayRecords.filter(r => r.type === 'check-out');
+        
+        if (checkIns.length > 0 && checkOuts.length > 0) {
+          const firstCheckIn = checkIns[checkIns.length - 1];
+          const lastCheckOut = checkOuts[0];
+          if (firstCheckIn.timestamp && lastCheckOut.timestamp) {
+            const diffMs = (lastCheckOut.timestamp.seconds - firstCheckIn.timestamp.seconds) * 1000;
+            totalMsThisMonth += diffMs;
+          }
+        }
+      });
+      
+      const monthHours = Math.floor(totalMsThisMonth / 3600000);
+      const monthMinutes = Math.floor((totalMsThisMonth % 3600000) / 60000);
+      const formattedMonthHours = totalMsThisMonth > 0 ? `${monthHours}h ${monthMinutes}m` : '0h 0m';
 
       setStats((prev) => ({
         ...prev,
         thisWeek: thisWeekDays.size,
         thisMonth: thisMonthDays.size,
+        totalHoursThisMonth: formattedMonthHours,
       }));
     } catch (error) {
       console.error('Error fetching attendance:', error);
@@ -237,6 +291,13 @@ export default function StaffDashboard() {
           value={stats.thisWeek}
           color="secondary"
           delay={50}
+        />
+        <StatCard
+          icon="⏳"
+          label="Hours This Month"
+          value={stats.totalHoursThisMonth}
+          color="warning"
+          delay={75}
         />
         <StatCard
           icon="📊"

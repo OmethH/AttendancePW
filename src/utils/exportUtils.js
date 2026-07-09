@@ -18,10 +18,28 @@ export function exportToCSV(data, filename = 'attendance_report') {
     'Office Location': record.office || 'Main Office',
     'Latitude': record.location ? record.location.latitude : '',
     'Longitude': record.location ? record.location.longitude : '',
+    'Daily Hours': record.dailyHours || '',
   }));
 
-  const csv = Papa.unparse(csvData);
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const mainCsv = Papa.unparse(csvData);
+  
+  const summaryMap = {};
+  data.forEach((record) => {
+    const name = record.userName || 'N/A';
+    if (!summaryMap[name]) {
+      summaryMap[name] = record.hoursThisMonth || '0h 0m';
+    }
+  });
+
+  const summaryData = Object.keys(summaryMap).map((name) => ({
+    'Staff Name': name,
+    'Hours This Month': summaryMap[name],
+  }));
+
+  const summaryCsv = Papa.unparse(summaryData);
+  const finalCsv = `${mainCsv}\n\n\n=== MONTHLY HOURS SUMMARY ===\n\n${summaryCsv}`;
+
+  const blob = new Blob([finalCsv], { type: 'text/csv;charset=utf-8;' });
   downloadBlob(blob, `${filename}.csv`);
 }
 
@@ -63,12 +81,13 @@ export function exportToPDF(data, filename = 'attendance_report', filters = {}) 
       ? new Date(record.timestamp.seconds * 1000).toLocaleTimeString()
       : '',
     record.office || 'Main Office',
-    record.location ? `${record.location.latitude.toFixed(5)}, ${record.location.longitude.toFixed(5)}` : 'No GPS'
+    record.location ? `${record.location.latitude.toFixed(5)}, ${record.location.longitude.toFixed(5)}` : 'No GPS',
+    record.dailyHours || ''
   ]);
 
   doc.autoTable({
     startY: yPos,
-    head: [['Staff Name', 'Date', 'Type', 'Time', 'Office', 'Coordinates']],
+    head: [['Staff Name', 'Date', 'Type', 'Time', 'Office', 'Coordinates', 'Daily Hrs']],
     body: tableData,
     theme: 'striped',
     headStyles: {
