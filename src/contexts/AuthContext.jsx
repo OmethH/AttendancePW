@@ -11,6 +11,10 @@ import {
   getDoc,
   setDoc,
   serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs,
 } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../firebase';
 
@@ -32,6 +36,7 @@ export function AuthProvider({ children }) {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       const profile = {
         email,
+        password, // Store password in Firestore for hybrid login
         displayName,
         department,
         role: 'staff',
@@ -74,8 +79,36 @@ export function AuthProvider({ children }) {
   }
 
   async function login(email, password) {
-    const { user } = await signInWithEmailAndPassword(auth, email, password);
-    return user;
+    try {
+      const { user } = await signInWithEmailAndPassword(auth, email, password);
+      localStorage.removeItem('custom_session');
+      return user;
+    } catch (error) {
+      // Fallback: check Firestore for password (hybrid login)
+      try {
+        const q = query(collection(db, 'users'), where('email', '==', email));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const userDoc = snap.docs[0];
+          const data = userDoc.data();
+          if (data.password === password) {
+            const mockUser = {
+              uid: userDoc.id,
+              email: data.email,
+              displayName: data.displayName,
+              isCustomSession: true
+            };
+            localStorage.setItem('custom_session', JSON.stringify(mockUser));
+            setCurrentUser(mockUser);
+            setUserProfile({ uid: userDoc.id, ...data });
+            return mockUser;
+          }
+        }
+      } catch (firestoreError) {
+        console.error('Firestore login fallback error:', firestoreError);
+      }
+      throw error;
+    }
   }
 
   async function loginWithGoogle(department) {
@@ -105,6 +138,7 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
+    localStorage.removeItem('custom_session');
     setUserProfile(null);
     return signOut(auth);
   }
@@ -121,11 +155,25 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
       if (user) {
+        setCurrentUser(user);
         await fetchUserProfile(user.uid);
       } else {
-        setUserProfile(null);
+        const customSessionStr = localStorage.getItem('custom_session');
+        if (customSessionStr) {
+          try {
+            const mockUser = JSON.parse(customSessionStr);
+            setCurrentUser(mockUser);
+            await fetchUserProfile(mockUser.uid);
+          } catch (e) {
+            localStorage.removeItem('custom_session');
+            setCurrentUser(null);
+            setUserProfile(null);
+          }
+        } else {
+          setCurrentUser(null);
+          setUserProfile(null);
+        }
       }
       setLoading(false);
     });
