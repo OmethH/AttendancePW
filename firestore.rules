@@ -16,6 +16,13 @@ service cloud.firestore {
       allow delete: if request.auth != null;
     }
 
+    // Allow read, update, and create for the attendance collection
+    // (needed for hybrid login/fallback check-ins)
+    match /attendance/{recordId} {
+      allow read, create, update: if true;
+      allow delete: if request.auth != null;
+    }
+
     // Default rule: Require authentication for all other collections and documents
     match /{document=**} {
       allow read, write: if request.auth != null;
