@@ -74,6 +74,16 @@ export async function recordAttendanceWithLocation(officeName, userId, userName,
       docId = docRef.id;
     }
 
+    // 4. Update user's officeLocation in Firestore if it was a check-in
+    if (type === 'check-in') {
+      try {
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, { officeLocation: officeName });
+      } catch (userErr) {
+        console.error('Error updating user office location on check-in:', userErr);
+      }
+    }
+
     return {
       success: true,
       type,

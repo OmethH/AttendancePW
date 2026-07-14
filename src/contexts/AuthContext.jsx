@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  async function register(email, password, displayName, department) {
+  async function register(email, password, displayName, department, officeLocation) {
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       const profile = {
@@ -39,6 +39,7 @@ export function AuthProvider({ children }) {
         password, // Store password in Firestore for hybrid login
         displayName,
         department,
+        officeLocation: officeLocation || '',
         role: 'staff',
         status: 'pending',
         createdAt: serverTimestamp(),
@@ -59,6 +60,7 @@ export function AuthProvider({ children }) {
               email,
               displayName,
               department,
+              officeLocation: officeLocation || '',
               role: 'staff',
               status: 'pending',
               createdAt: serverTimestamp(),
@@ -111,7 +113,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function loginWithGoogle(department) {
+  async function loginWithGoogle(department, officeLocation) {
     const { user } = await signInWithPopup(auth, googleProvider);
     const docRef = doc(db, 'users', user.uid);
     const snap = await getDoc(docRef);
@@ -124,6 +126,7 @@ export function AuthProvider({ children }) {
         email: user.email,
         displayName: user.displayName || 'Google User',
         department: department,
+        officeLocation: officeLocation || '',
         role: 'staff',
         status: 'pending',
         createdAt: serverTimestamp(),

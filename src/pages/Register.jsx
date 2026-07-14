@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { collection, query, getDocs, orderBy } from 'firebase/firestore';
+import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Register() {
@@ -9,7 +11,9 @@ export default function Register() {
     password: '',
     confirmPassword: '',
     department: '',
+    officeLocation: '',
   });
+  const [offices, setOffices] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -18,8 +22,32 @@ export default function Register() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    async function fetchOffices() {
+      try {
+        const snap = await getDocs(query(collection(db, 'offices'), orderBy('name', 'asc')));
+        setOffices(snap.docs.map((d) => d.data().name));
+      } catch (error) {
+        console.error('Error fetching offices:', error);
+        // Fallback to active locations list if permissions are restricted
+        setOffices([
+          "Attidiya",
+          "Bokundara",
+          "Head Office",
+          "Kottawa",
+          "Ladies (Dehiwala)",
+          "Malabe",
+          "Nawala",
+          "Obesekarapura",
+          "Ragama"
+        ]);
+      }
+    }
+    fetchOffices();
+  }, []);
+
+  useEffect(() => {
     if (searchParams.get('error') === 'google-register-first') {
-      setError('Please select a department first, then click "Register with Google" to create your account.');
+      setError('Please select a department and office location first, then click "Register with Google" to create your account.');
     }
   }, [searchParams]);
 
@@ -28,9 +56,12 @@ export default function Register() {
     if (!formData.department) {
       return setError('Please select a department first.');
     }
+    if (!formData.officeLocation) {
+      return setError('Please select an office location first.');
+    }
     setLoading(true);
     try {
-      await loginWithGoogle(formData.department);
+      await loginWithGoogle(formData.department, formData.officeLocation);
       setSuccess(true);
     } catch (err) {
       console.error(err);
@@ -48,6 +79,9 @@ export default function Register() {
     e.preventDefault();
     setError('');
 
+    if (!formData.officeLocation) {
+      return setError('Please select an office location.');
+    }
     if (formData.password !== formData.confirmPassword) {
       return setError('Passwords do not match.');
     }
@@ -57,7 +91,13 @@ export default function Register() {
 
     setLoading(true);
     try {
-      await register(formData.email, formData.password, formData.displayName, formData.department);
+      await register(
+        formData.email,
+        formData.password,
+        formData.displayName,
+        formData.department,
+        formData.officeLocation
+      );
       setSuccess(true);
     } catch (err) {
       console.error(err);
@@ -171,6 +211,25 @@ export default function Register() {
               <option value="IT">IT</option>
               <option value="Business">Business</option>
               <option value="Trainer">Trainer</option>
+            </select>
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="reg-office">Office Location</label>
+            <select
+              id="reg-office"
+              name="officeLocation"
+              className="input"
+              value={formData.officeLocation}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Select office location</option>
+              {offices.map((office) => (
+                <option key={office} value={office}>
+                  {office}
+                </option>
+              ))}
             </select>
           </div>
 

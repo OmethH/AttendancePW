@@ -152,9 +152,17 @@ export default function StaffDashboard() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
-        <h1>Welcome, {userProfile?.displayName?.split(' ')[0] || 'Staff'} 👋</h1>
-        <p>Your attendance summary and history</p>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+        <div>
+          <h1>Welcome, {userProfile?.displayName?.split(' ')[0] || 'Staff'} 👋</h1>
+          <p>Your attendance summary and history</p>
+        </div>
+        {userProfile?.officeLocation && (
+          <div className="glass" style={{ padding: '8px 16px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: 'var(--font-sm)', color: 'var(--text-secondary)' }}>Registered Office:</span>
+            <span className="badge badge-neutral" style={{ fontWeight: 600 }}>📍 {userProfile.officeLocation}</span>
+          </div>
+        )}
       </div>
 
       {/* Quick Actions & Status Grid */}

@@ -21,6 +21,8 @@ export default function StaffManagement() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+  const [offices, setOffices] = useState([]);
+  const [editingStaff, setEditingStaff] = useState(null);
 
   useEffect(() => {
     const status = searchParams.get('status') || 'all';
@@ -29,7 +31,17 @@ export default function StaffManagement() {
 
   useEffect(() => {
     fetchStaff();
+    fetchOffices();
   }, []);
+
+  async function fetchOffices() {
+    try {
+      const snap = await getDocs(query(collection(db, 'offices'), orderBy('name', 'asc')));
+      setOffices(snap.docs.map((d) => d.data().name));
+    } catch (error) {
+      console.error('Error fetching offices:', error);
+    }
+  }
 
   async function fetchStaff() {
     try {
@@ -87,6 +99,46 @@ export default function StaffManagement() {
     }
   }
 
+  function handleStartEdit(member) {
+    setEditingStaff({
+      uid: member.uid,
+      displayName: member.displayName || '',
+      department: member.department || '',
+      officeLocation: member.officeLocation || '',
+      role: member.role || 'staff',
+      status: member.status || 'pending',
+    });
+  }
+
+  function handleEditChange(e) {
+    const { name, value } = e.target;
+    setEditingStaff((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleSaveEdit(e) {
+    e.preventDefault();
+    if (!editingStaff) return;
+    try {
+      const { uid, displayName, department, officeLocation, role, status } = editingStaff;
+      await updateDoc(doc(db, 'users', uid), {
+        displayName,
+        department,
+        officeLocation,
+        role,
+        status,
+      });
+
+      setStaff((prev) =>
+        prev.map((s) => (s.uid === uid ? { ...s, displayName, department, officeLocation, role, status } : s))
+      );
+      setEditingStaff(null);
+      showToast('Staff member updated successfully!', 'success');
+    } catch (error) {
+      console.error('Error updating staff member:', error);
+      showToast('Failed to update staff member.', 'error');
+    }
+  }
+
   function showToast(message, type) {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
@@ -99,7 +151,8 @@ export default function StaffManagement() {
       return (
         s.displayName?.toLowerCase().includes(q) ||
         s.email?.toLowerCase().includes(q) ||
-        s.department?.toLowerCase().includes(q)
+        s.department?.toLowerCase().includes(q) ||
+        s.officeLocation?.toLowerCase().includes(q)
       );
     }
     return true;
@@ -182,6 +235,7 @@ export default function StaffManagement() {
                 <th>Name</th>
                 <th>Email</th>
                 <th>Department</th>
+                <th>Office Location</th>
                 <th>Status</th>
                 <th>Joined</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
@@ -219,6 +273,15 @@ export default function StaffManagement() {
                   <td style={{ color: 'var(--text-secondary)' }}>{member.email}</td>
                   <td>
                     <span className="badge badge-neutral">{member.department || '—'}</span>
+                  </td>
+                  <td>
+                    {member.officeLocation ? (
+                      <span className="badge badge-neutral" style={{ opacity: 0.9 }}>
+                        📍 {member.officeLocation}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--text-tertiary)' }}>—</span>
+                    )}
                   </td>
                   <td>
                     <span
@@ -271,6 +334,15 @@ export default function StaffManagement() {
                       )}
                       <button
                         className="btn btn-ghost btn-sm"
+                        onClick={() => handleStartEdit(member)}
+                        title="Edit staff details"
+                        style={{ color: 'var(--text-secondary)' }}
+                        id={`edit-${member.uid}`}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        className="btn btn-ghost btn-sm"
                         onClick={() => handleDelete(member.uid, member.displayName)}
                         title="Remove staff member"
                         style={{ color: 'var(--accent-danger)' }}
@@ -283,6 +355,148 @@ export default function StaffManagement() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Edit Staff Modal */}
+      {editingStaff && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+            background: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+          onClick={() => setEditingStaff(null)}
+        >
+          <div
+            className="glass-strong animate-scale-in"
+            style={{
+              width: '100%',
+              maxWidth: '440px',
+              padding: 'var(--space-xl)',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--space-md)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 style={{ fontSize: 'var(--font-lg)', fontWeight: 700 }}>✏️ Edit Staff Details</h3>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => setEditingStaff(null)}
+                style={{ fontSize: '1.25rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+              <div className="input-group">
+                <label htmlFor="edit-name">Full Name</label>
+                <input
+                  id="edit-name"
+                  type="text"
+                  name="displayName"
+                  className="input"
+                  value={editingStaff.displayName}
+                  onChange={handleEditChange}
+                  required
+                />
+              </div>
+
+              <div className="input-group">
+                <label htmlFor="edit-department">Department</label>
+                <select
+                  id="edit-department"
+                  name="department"
+                  className="input"
+                  value={editingStaff.department}
+                  onChange={handleEditChange}
+                  required
+                >
+                  <option value="">Select department</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="HR">Human Resources</option>
+                  <option value="Operations">Operations</option>
+                  <option value="IT">IT</option>
+                  <option value="Business">Business</option>
+                  <option value="Trainer">Trainer</option>
+                </select>
+              </div>
+
+              <div className="input-group">
+                <label htmlFor="edit-office">Office Location</label>
+                <select
+                  id="edit-office"
+                  name="officeLocation"
+                  className="input"
+                  value={editingStaff.officeLocation}
+                  onChange={handleEditChange}
+                >
+                  <option value="">None (Not Checked In)</option>
+                  {offices.map((office) => (
+                    <option key={office} value={office}>
+                      {office}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="input-group">
+                <label htmlFor="edit-role">Role</label>
+                <select
+                  id="edit-role"
+                  name="role"
+                  className="input"
+                  value={editingStaff.role}
+                  onChange={handleEditChange}
+                  required
+                >
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              <div className="input-group">
+                <label htmlFor="edit-status">Status</label>
+                <select
+                  id="edit-status"
+                  name="status"
+                  className="input"
+                  value={editingStaff.status}
+                  onChange={handleEditChange}
+                  required
+                >
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+
+              <div className="flex gap-sm justify-end" style={{ display: 'flex', gap: 'var(--space-sm)', justifyContent: 'flex-end', marginTop: 'var(--space-md)' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setEditingStaff(null)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
