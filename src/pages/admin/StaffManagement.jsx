@@ -10,7 +10,9 @@ import {
   deleteDoc,
   orderBy,
 } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { initializeApp, deleteApp } from 'firebase/app';
+import { getAuth, signInWithEmailAndPassword, deleteUser } from 'firebase/auth';
+import app, { db } from '../../firebase';
 
 export default function StaffManagement() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -90,6 +92,21 @@ export default function StaffManagement() {
       return;
     }
     try {
+      // Delete user from Firebase Authentication first if credentials exist in Firestore
+      const member = staff.find((s) => s.uid === uid);
+      if (member && member.email && member.password) {
+        try {
+          const tempApp = initializeApp(app.options, 'tempDeleteApp');
+          const tempAuth = getAuth(tempApp);
+          const userCredential = await signInWithEmailAndPassword(tempAuth, member.email, member.password);
+          await deleteUser(userCredential.user);
+          await deleteApp(tempApp);
+          console.log('Successfully deleted user from Firebase Auth');
+        } catch (authError) {
+          console.error('Failed to delete user from Firebase Auth:', authError);
+        }
+      }
+
       await deleteDoc(doc(db, 'users', uid));
       setStaff((prev) => prev.filter((s) => s.uid !== uid));
       showToast('Staff member removed.', 'info');
