@@ -16,12 +16,14 @@ export default function ScanQR() {
   const [searchParams] = useSearchParams();
   const { currentUser, userProfile } = useAuth();
   const scannerRef = useRef(null);
+  const processedRef = useRef(false);
   const navigate = useNavigate();
 
   // Check if we came from a static QR link (with ?office=xxx)
   useEffect(() => {
     const office = searchParams.get('office');
-    if (office && currentUser && userProfile) {
+    if (office && currentUser && userProfile && !processedRef.current) {
+      processedRef.current = true;
       handleAttendanceProcess(office);
     }
   }, [searchParams, currentUser, userProfile]);
@@ -62,10 +64,12 @@ export default function ScanQR() {
   }, [scanning]);
 
   function handleScannedUrl(url) {
+    if (processedRef.current) return;
     try {
       const parsed = new URL(url);
       const office = parsed.searchParams.get('office');
       if (office) {
+        processedRef.current = true;
         handleAttendanceProcess(office);
       } else {
         setResult({
@@ -91,6 +95,11 @@ export default function ScanQR() {
     setLoadingLocation(true);
     setLocationError('');
     setResult(null);
+
+    // Clean up office query param from address bar to prevent accidental duplicate scans on refresh
+    if (searchParams.get('office')) {
+      navigate('/staff/scan', { replace: true });
+    }
 
     // Request GPS location
     if (!navigator.geolocation) {
@@ -153,6 +162,7 @@ export default function ScanQR() {
   }
 
   function handleScanAgain() {
+    processedRef.current = false;
     setResult(null);
     setUserCoords(null);
     setLocationError('');
