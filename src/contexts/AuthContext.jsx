@@ -3,6 +3,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth';
@@ -113,8 +115,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function loginWithGoogle(department, officeLocation) {
-    const { user } = await signInWithPopup(auth, googleProvider);
+  async function handleGoogleUserProfile(user, department, officeLocation) {
     const docRef = doc(db, 'users', user.uid);
     const snap = await getDoc(docRef);
     if (!snap.exists()) {
@@ -140,6 +141,32 @@ export function AuthProvider({ children }) {
     return user;
   }
 
+  async function loginWithGoogle(department, officeLocation) {
+    try {
+      const { user } = await signInWithPopup(auth, googleProvider);
+      return await handleGoogleUserProfile(user, department, officeLocation);
+    } catch (popupError) {
+      if (popupError.code === 'auth/new-user') {
+        throw popupError;
+      }
+      // If popup is blocked or fails due to COOP / window channel, attempt redirect fallback
+      if (
+        popupError.code === 'auth/popup-blocked' ||
+        popupError.code === 'auth/cancelled-popup-request' ||
+        popupError.message?.includes('Cross-Origin-Opener-Policy') ||
+        popupError.message?.includes('message channel closed')
+      ) {
+        console.warn('Popup login failed or blocked by browser COOP, falling back to redirect:', popupError);
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
+      if (popupError.code === 'auth/popup-closed-by-user') {
+        throw { code: 'auth/popup-closed-by-user', message: 'Sign-in popup was closed.' };
+      }
+      throw popupError;
+    }
+  }
+
   function logout() {
     localStorage.removeItem('custom_session');
     setUserProfile(null);
@@ -157,6 +184,17 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
+    // Check for redirect result from signInWithRedirect
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result && result.user) {
+          await handleGoogleUserProfile(result.user);
+        }
+      })
+      .catch((err) => {
+        console.error('Redirect sign-in error:', err);
+      });
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);

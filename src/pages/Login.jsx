@@ -23,12 +23,17 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      await loginWithGoogle();
-      navigate('/');
+      const resUser = await loginWithGoogle();
+      if (resUser) {
+        navigate('/');
+      }
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/new-user') {
         navigate('/register?error=google-register-first');
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        // User closed the popup window manually, no error message required
+        setError('');
       } else {
         setError('Google Sign-In failed. Please try again.');
       }
