@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { LayoutDashboard, Users, ClipboardList, QrCode } from 'lucide-react';
+import { LayoutDashboard, Users, ClipboardList, QrCode, Home } from 'lucide-react';
 
 export default function Sidebar({ isOpen, onClose }) {
   const { isAdmin } = useAuth();
@@ -8,6 +8,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const adminLinks = [
     { to: '/admin', icon: <LayoutDashboard size={18} />, label: 'Dashboard', end: true },
+    { to: '/admin/wfh-requests', icon: <Home size={18} />, label: 'WFH Requests' },
     { to: '/admin/staff', icon: <Users size={18} />, label: 'Staff Management' },
     { to: '/admin/reports', icon: <ClipboardList size={18} />, label: 'Attendance Reports' },
     { to: '/admin/kiosk', icon: <QrCode size={18} />, label: 'QR Code' },

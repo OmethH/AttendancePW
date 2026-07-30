@@ -103,17 +103,33 @@ export default function AttendanceTable({ records, showUser = true, pageSize = 1
                     ? new Date(record.timestamp.seconds * 1000).toLocaleTimeString()
                     : '—'}
                 </td>
-                <td>{record.office || 'Main Office'}</td>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {record.attendanceType === 'WFH' ? (
+                      <span className="badge badge-warning" style={{ fontSize: '11px', padding: '2px 6px' }}>🏠 WFH</span>
+                    ) : (
+                      <span className="badge badge-neutral" style={{ fontSize: '11px', padding: '2px 6px' }}>🏢 Office</span>
+                    )}
+                    <span>{record.office || 'Main Office'}</span>
+                  </div>
+                </td>
                 <td>
                   {record.location ? (
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${record.location.latitude},${record.location.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-map"
-                    >
-                      🌍 View on Map
-                    </a>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      {record.location.addressName && (
+                        <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)' }}>
+                          📍 {record.location.addressName}
+                        </span>
+                      )}
+                      <a
+                        href={record.location.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${record.location.latitude},${record.location.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-map"
+                      >
+                        🌍 View on Map
+                      </a>
+                    </div>
                   ) : (
                     <span style={{ color: 'var(--text-tertiary)', fontSize: 'var(--font-xs)' }}>No GPS</span>
                   )}

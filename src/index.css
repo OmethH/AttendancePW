@@ -1271,3 +1271,29 @@ tbody tr:hover {
   border-color: rgba(255, 107, 107, 0.25) !important;
   box-shadow: 0 0 12px rgba(255, 107, 107, 0.15) !important;
 }
+
+/* ── Modal Overlay & Dialog ─────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(5, 5, 15, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+}
+
+.modal-content {
+  width: 100%;
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-lg), var(--shadow-glow-accent);
+}
+
