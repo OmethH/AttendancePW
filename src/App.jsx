@@ -13,7 +13,6 @@ import AdminDashboard from './pages/admin/Dashboard';
 import StaffManagement from './pages/admin/StaffManagement';
 import AttendanceReports from './pages/admin/AttendanceReports';
 import QRKiosk from './pages/admin/QRKiosk';
-import WFHRequests from './pages/admin/WFHRequests';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import ScanQR from './pages/staff/ScanQR';
 
@@ -68,13 +67,6 @@ function AppRoutes() {
         <ProtectedRoute requiredRole="admin">
           <AppLayout>
             <StaffManagement />
-          </AppLayout>
-        </ProtectedRoute>
-      } />
-      <Route path="/admin/wfh-requests" element={
-        <ProtectedRoute requiredRole="admin">
-          <AppLayout>
-            <WFHRequests />
           </AppLayout>
         </ProtectedRoute>
       } />

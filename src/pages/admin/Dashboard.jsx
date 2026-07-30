@@ -59,19 +59,11 @@ export default function AdminDashboard() {
       const todaySnap = await getDocs(todayQuery);
       const uniquePresent = new Set(todaySnap.docs.map((d) => d.data().userId));
 
-      // Get pending WFH requests
-      const wfhQuery = query(
-        collection(db, 'wfh_requests'),
-        where('status', '==', 'PENDING')
-      );
-      const wfhSnap = await getDocs(wfhQuery);
-
       setStats({
         totalStaff: approvedStaff.length,
         presentToday: uniquePresent.size,
         absentToday: Math.max(0, approvedStaff.length - uniquePresent.size),
         pendingApprovals: pendingStaff.length,
-        pendingWFH: wfhSnap.size,
       });
 
       // Recent attendance records
@@ -185,14 +177,6 @@ export default function AdminDashboard() {
           color="warning"
           delay={150}
           onClick={() => navigate('/admin/staff?status=pending')}
-        />
-        <StatCard
-          icon="🏠"
-          label="Pending WFH Requests"
-          value={stats.pendingWFH || 0}
-          color="accent"
-          delay={200}
-          onClick={() => navigate('/admin/wfh-requests')}
         />
       </div>
 

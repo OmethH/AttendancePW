@@ -1,21 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { QrCode, Home, CalendarPlus, AlertCircle, X } from 'lucide-react';
+import { QrCode } from 'lucide-react';
 import {
   collection,
   query,
   where,
   getDocs,
-  orderBy,
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatDate, calculateDailyMs } from '../../utils/qrTokenUtils';
 import {
   isEligibleForWFH,
-  submitWFHRequest,
-  getUserWFHRequests,
-  getTodayWFHRequest,
   recordWFHAttendance,
 } from '../../utils/wfhUtils';
 import StatCard from '../../components/StatCard';
@@ -30,17 +26,8 @@ export default function StaffDashboard() {
   const [loading, setLoading] = useState(true);
 
   // WFH Feature State
-  const [todayWFHRequest, setTodayWFHRequest] = useState(null);
-  const [wfhHistory, setWfhHistory] = useState([]);
   const [wfhActiveRecord, setWfhActiveRecord] = useState(null);
   const [wfhActionLoading, setWfhActionLoading] = useState(false);
-  const [showRequestModal, setShowRequestModal] = useState(false);
-  const [showNoticeModal, setShowNoticeModal] = useState(false);
-  const [requestFormData, setRequestFormData] = useState({
-    requestDate: formatDate(new Date()),
-    reason: '',
-  });
-  const [requestSubmitting, setRequestSubmitting] = useState(false);
   const [wfhAlert, setWfhAlert] = useState({ text: '', type: '' });
 
   const eligibleForWFH = isEligibleForWFH(userProfile?.department);
@@ -48,24 +35,8 @@ export default function StaffDashboard() {
   useEffect(() => {
     if (currentUser) {
       fetchMyAttendance();
-      if (eligibleForWFH) {
-        fetchWFHData();
-      }
     }
   }, [currentUser, userProfile]);
-
-  async function fetchWFHData() {
-    try {
-      const today = formatDate(new Date());
-      const req = await getTodayWFHRequest(currentUser.uid, today);
-      setTodayWFHRequest(req);
-
-      const history = await getUserWFHRequests(currentUser.uid);
-      setWfhHistory(history);
-    } catch (err) {
-      console.error('Error loading WFH data:', err);
-    }
-  }
 
   async function fetchMyAttendance() {
     try {
@@ -199,10 +170,6 @@ export default function StaffDashboard() {
     setWfhAlert({ text: '', type: '' });
 
     if (!eligibleForWFH) {
-      setWfhAlert({
-        text: 'Work From Home is not available for Trainer & Maintenance departments.',
-        type: 'error',
-      });
       return;
     }
 
@@ -215,20 +182,8 @@ export default function StaffDashboard() {
       return;
     }
 
-    // 1. If currently checked in via WFH -> perform WFH Check Out
-    if (wfhActiveRecord) {
-      await processWFHCheckInOut('check-out');
-      return;
-    }
-
-    // 2. If trying to Check In -> verify approved request for today
-    if (!todayWFHRequest || todayWFHRequest.status !== 'APPROVED') {
-      setShowNoticeModal(true);
-      return;
-    }
-
-    // 3. Approved request exists -> perform WFH Check In
-    await processWFHCheckInOut('check-in');
+    const actionType = wfhActiveRecord ? 'check-out' : 'check-in';
+    await processWFHCheckInOut(actionType);
   }
 
   async function processWFHCheckInOut(actionType) {
@@ -257,7 +212,6 @@ export default function StaffDashboard() {
           userName: userProfile?.displayName || currentUser.email,
           type: actionType,
           coords,
-          wfhRequestId: todayWFHRequest?.id || null,
         });
 
         setWfhActionLoading(false);
@@ -265,7 +219,6 @@ export default function StaffDashboard() {
         if (res.success) {
           setWfhAlert({ text: res.message, type: 'success' });
           await fetchMyAttendance();
-          await fetchWFHData();
         } else {
           setWfhAlert({ text: res.message, type: 'error' });
         }
@@ -284,38 +237,6 @@ export default function StaffDashboard() {
         maximumAge: 0,
       }
     );
-  }
-
-  // WFH Request Form Submission
-  async function handleRequestSubmit(e) {
-    e.preventDefault();
-    setRequestSubmitting(true);
-    setWfhAlert({ text: '', type: '' });
-
-    try {
-      const res = await submitWFHRequest({
-        userId: currentUser.uid,
-        userName: userProfile?.displayName || currentUser.email,
-        department: userProfile?.department || 'General',
-        requestDate: requestFormData.requestDate,
-        reason: requestFormData.reason,
-      });
-
-      setRequestSubmitting(false);
-
-      if (res.success) {
-        setShowRequestModal(false);
-        setShowNoticeModal(false);
-        setWfhAlert({ text: res.message, type: 'success' });
-        setRequestFormData({ requestDate: formatDate(new Date()), reason: '' });
-        await fetchWFHData();
-      } else {
-        setWfhAlert({ text: res.message, type: 'error' });
-      }
-    } catch (err) {
-      setRequestSubmitting(false);
-      setWfhAlert({ text: err.message || 'Error submitting request.', type: 'error' });
-    }
   }
 
   if (loading) {
@@ -490,13 +411,6 @@ export default function StaffDashboard() {
                 <h4 style={{ fontSize: 'var(--font-md)', fontWeight: 600, color: 'var(--text-primary)' }}>
                   {wfhActiveRecord ? '🏠 WFH Active' : '🏠 Work From Home'}
                 </h4>
-                <button
-                  onClick={() => setShowRequestModal(true)}
-                  className="btn btn-secondary"
-                  style={{ fontSize: '11px', padding: '2px 8px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                >
-                  <CalendarPlus size={12} /> Request WFH
-                </button>
               </div>
 
               {wfhActiveRecord ? (
@@ -510,11 +424,7 @@ export default function StaffDashboard() {
                 </div>
               ) : (
                 <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  {todayWFHRequest?.status === 'APPROVED'
-                    ? '✅ WFH approved for today! Click Check In to start.'
-                    : todayWFHRequest?.status === 'PENDING'
-                    ? '⏳ WFH request submitted & awaiting admin approval.'
-                    : 'Submit a WFH request to check in remotely.'}
+                  Click below to check in remotely for Work From Home.
                 </p>
               )}
             </div>
@@ -581,72 +491,6 @@ export default function StaffDashboard() {
         />
       </div>
 
-      {/* WFH Requests History Section (Eligible Users) */}
-      {eligibleForWFH && wfhHistory.length > 0 && (
-        <div style={{ marginBottom: 'var(--space-xl)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
-            <h3 style={{ fontSize: 'var(--font-lg)' }}>🏠 My WFH Request History</h3>
-            <button
-              onClick={() => setShowRequestModal(true)}
-              className="btn btn-secondary"
-              style={{ fontSize: 'var(--font-xs)', padding: '6px 12px' }}
-            >
-              + Submit New Request
-            </button>
-          </div>
-          <div className="table-container glass">
-            <table>
-              <thead>
-                <tr>
-                  <th>Requested Date</th>
-                  <th>Reason</th>
-                  <th>Submitted Date</th>
-                  <th>Status</th>
-                  <th>Reviewed By</th>
-                </tr>
-              </thead>
-              <tbody>
-                {wfhHistory.map((req, i) => (
-                  <tr key={req.id || i}>
-                    <td style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>
-                      📅 {req.requestDate}
-                    </td>
-                    <td style={{ color: 'var(--text-secondary)' }}>
-                      {req.reason || <em>No reason provided</em>}
-                    </td>
-                    <td style={{ color: 'var(--text-tertiary)', fontSize: 'var(--font-xs)' }}>
-                      {req.createdAt?.seconds
-                        ? new Date(req.createdAt.seconds * 1000).toLocaleDateString()
-                        : '—'}
-                    </td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          req.status === 'APPROVED'
-                            ? 'badge-success'
-                            : req.status === 'REJECTED'
-                            ? 'badge-danger'
-                            : 'badge-warning'
-                        }`}
-                      >
-                        {req.status === 'APPROVED'
-                          ? '✅ Approved'
-                          : req.status === 'REJECTED'
-                          ? '❌ Rejected'
-                          : '⏳ Pending'}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)' }}>
-                      {req.approvedByName ? req.approvedByName : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
       {/* History */}
       <div>
         <h3 style={{ fontSize: 'var(--font-lg)', marginBottom: 'var(--space-md)' }}>
@@ -654,109 +498,6 @@ export default function StaffDashboard() {
         </h3>
         <AttendanceTable records={records} showUser={false} pageSize={10} />
       </div>
-
-      {/* Notice Modal when WFH Request is not approved for today */}
-      {showNoticeModal && (
-        <div className="modal-overlay" onClick={() => setShowNoticeModal(false)}>
-          <div className="modal-content glass-strong animate-scale-in" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <AlertCircle color="var(--accent-warning)" size={24} />
-                <h3 style={{ fontSize: 'var(--font-lg)' }}>WFH Not Approved</h3>
-              </div>
-              <button
-                onClick={() => setShowNoticeModal(false)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div style={{ background: 'var(--surface-1)', padding: '16px', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-lg)' }}>
-              <p style={{ fontSize: 'var(--font-sm)', color: 'var(--text-primary)', fontWeight: 500, marginBottom: '8px' }}>
-                WFH access is not approved for today.
-              </p>
-              <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)' }}>
-                Please submit a WFH request to your manager for approval before checking in remotely.
-              </p>
-            </div>
-
-            <div className="flex gap-sm justify-end">
-              <button className="btn btn-secondary" onClick={() => setShowNoticeModal(false)}>
-                Cancel
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={() => {
-                  setShowNoticeModal(false);
-                  setShowRequestModal(true);
-                }}
-              >
-                Submit WFH Request
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Submit WFH Request Modal */}
-      {showRequestModal && (
-        <div className="modal-overlay" onClick={() => setShowRequestModal(false)}>
-          <div className="modal-content glass-strong animate-scale-in" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Home color="var(--accent-primary)" size={22} />
-                <h3 style={{ fontSize: 'var(--font-lg)' }}>Request Work From Home</h3>
-              </div>
-              <button
-                onClick={() => setShowRequestModal(false)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleRequestSubmit}>
-              <div className="input-group" style={{ marginBottom: 'var(--space-md)' }}>
-                <label style={{ fontSize: 'var(--font-xs)', fontWeight: 600 }}>Date for WFH</label>
-                <input
-                  type="date"
-                  className="input"
-                  value={requestFormData.requestDate}
-                  onChange={(e) => setRequestFormData({ ...requestFormData, requestDate: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="input-group" style={{ marginBottom: 'var(--space-lg)' }}>
-                <label style={{ fontSize: 'var(--font-xs)', fontWeight: 600 }}>Reason (Optional)</label>
-                <textarea
-                  className="input"
-                  rows={3}
-                  placeholder="E.g., Working remotely due to client deployment..."
-                  value={requestFormData.reason}
-                  onChange={(e) => setRequestFormData({ ...requestFormData, reason: e.target.value })}
-                  style={{ resize: 'vertical' }}
-                />
-              </div>
-
-              <div className="flex gap-sm justify-end">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowRequestModal(false)}
-                  disabled={requestSubmitting}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={requestSubmitting}>
-                  {requestSubmitting ? 'Submitting...' : 'Submit Request'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
