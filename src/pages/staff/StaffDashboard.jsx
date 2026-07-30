@@ -470,26 +470,26 @@ export default function StaffDashboard() {
         </div>
 
         {/* Work From Home Card */}
-        <div
-          className="glass animate-fade-in-up"
-          style={{
-            padding: 'var(--space-lg)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            gap: 'var(--space-sm)',
-            border: wfhActiveRecord ? '1px solid var(--accent-success)' : '1px dashed var(--border-subtle)',
-            animationDelay: '200ms',
-            minHeight: '160px',
-            background: wfhActiveRecord ? 'rgba(46, 213, 115, 0.05)' : 'transparent',
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <h4 style={{ fontSize: 'var(--font-md)', fontWeight: 600, color: 'var(--text-primary)' }}>
-                {wfhActiveRecord ? '🏠 WFH Active' : '🏠 Work From Home'}
-              </h4>
-              {eligibleForWFH && (
+        {eligibleForWFH && (
+          <div
+            className="glass animate-fade-in-up"
+            style={{
+              padding: 'var(--space-lg)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: 'var(--space-sm)',
+              border: wfhActiveRecord ? '1px solid var(--accent-success)' : '1px dashed var(--border-subtle)',
+              animationDelay: '200ms',
+              minHeight: '160px',
+              background: wfhActiveRecord ? 'rgba(46, 213, 115, 0.05)' : 'transparent',
+            }}
+          >
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <h4 style={{ fontSize: 'var(--font-md)', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {wfhActiveRecord ? '🏠 WFH Active' : '🏠 Work From Home'}
+                </h4>
                 <button
                   onClick={() => setShowRequestModal(true)}
                   className="btn btn-secondary"
@@ -497,34 +497,28 @@ export default function StaffDashboard() {
                 >
                   <CalendarPlus size={12} /> Request WFH
                 </button>
+              </div>
+
+              {wfhActiveRecord ? (
+                <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)' }}>
+                  <div style={{ color: 'var(--accent-success)', fontWeight: 600, marginBottom: '2px' }}>
+                    Checked In at {todayStatus?.time}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                    📍 {wfhActiveRecord.location?.addressName || 'Work From Home'}
+                  </div>
+                </div>
+              ) : (
+                <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  {todayWFHRequest?.status === 'APPROVED'
+                    ? '✅ WFH approved for today! Click Check In to start.'
+                    : todayWFHRequest?.status === 'PENDING'
+                    ? '⏳ WFH request submitted & awaiting admin approval.'
+                    : 'Submit a WFH request to check in remotely.'}
+                </p>
               )}
             </div>
 
-            {!eligibleForWFH ? (
-              <p style={{ fontSize: 'var(--font-xs)', color: 'var(--accent-warning)', lineHeight: '1.4' }}>
-                ⚠️ WFH feature is not eligible for {userProfile?.department || 'your'} department.
-              </p>
-            ) : wfhActiveRecord ? (
-              <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)' }}>
-                <div style={{ color: 'var(--accent-success)', fontWeight: 600, marginBottom: '2px' }}>
-                  Checked In at {todayStatus?.time}
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-                  📍 {wfhActiveRecord.location?.addressName || 'Work From Home'}
-                </div>
-              </div>
-            ) : (
-              <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                {todayWFHRequest?.status === 'APPROVED'
-                  ? '✅ WFH approved for today! Click Check In to start.'
-                  : todayWFHRequest?.status === 'PENDING'
-                  ? '⏳ WFH request submitted & awaiting admin approval.'
-                  : 'Submit a WFH request to check in remotely.'}
-              </p>
-            )}
-          </div>
-
-          {eligibleForWFH && (
             <button
               onClick={handleWFHButtonClick}
               className={`btn ${wfhActiveRecord ? 'btn-secondary' : 'btn-primary'}`}
@@ -551,8 +545,8 @@ export default function StaffDashboard() {
                 <>🏠 Work From Home — Check In</>
               )}
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Stats */}
