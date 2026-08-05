@@ -139,9 +139,9 @@ function AppLayout({ children }) {
   );
 }
 
-export default function App() {
+export default function App({ basename = '' }) {
   return (
-    <Router>
+    <Router basename={basename}>
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>

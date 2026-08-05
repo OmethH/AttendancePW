@@ -210,6 +210,7 @@ export default function StaffDashboard() {
         const res = await recordWFHAttendance({
           userId: currentUser.uid,
           userName: userProfile?.displayName || currentUser.email,
+          office: userProfile?.officeLocation || userProfile?.office || 'Head Office',
           type: actionType,
           coords,
         });

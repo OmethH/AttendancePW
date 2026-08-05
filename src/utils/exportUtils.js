@@ -12,6 +12,7 @@ export function exportToCSV(data, filename = 'attendance_report') {
     'Staff Name': record.userName || 'N/A',
     'Date': record.date || '',
     'Type': record.type || '',
+    'Work Mode': record.attendanceType === 'WFH' || record.office === 'Work From Home' ? 'WFH' : 'Office',
     'Time': record.timestamp
       ? new Date(record.timestamp.seconds * 1000).toLocaleTimeString()
       : '',
@@ -77,6 +78,7 @@ export function exportToPDF(data, filename = 'attendance_report', filters = {}) 
     record.userName || 'N/A',
     record.date || '',
     record.type || '',
+    record.attendanceType === 'WFH' || record.office === 'Work From Home' ? 'WFH' : 'Office',
     record.timestamp
       ? new Date(record.timestamp.seconds * 1000).toLocaleTimeString()
       : '',
@@ -87,7 +89,7 @@ export function exportToPDF(data, filename = 'attendance_report', filters = {}) 
 
   doc.autoTable({
     startY: yPos,
-    head: [['Staff Name', 'Date', 'Type', 'Time', 'Office', 'Coordinates', 'Daily Hrs']],
+    head: [['Staff Name', 'Date', 'Type', 'Mode', 'Time', 'Office', 'Coordinates', 'Daily Hrs']],
     body: tableData,
     theme: 'striped',
     headStyles: {

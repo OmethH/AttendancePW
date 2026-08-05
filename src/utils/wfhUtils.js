@@ -240,7 +240,7 @@ export async function getDeviceAndIPInfo() {
 /**
  * Record WFH Attendance Check-In / Check-Out
  */
-export async function recordWFHAttendance({ userId, userName, type, coords, wfhRequestId }) {
+export async function recordWFHAttendance({ userId, userName, office, type, coords, wfhRequestId }) {
   try {
     const now = new Date();
     const today = formatDate(now);
@@ -260,7 +260,7 @@ export async function recordWFHAttendance({ userId, userName, type, coords, wfhR
       type, // 'check-in' or 'check-out'
       attendanceType: 'WFH',
       wfhRequestId: wfhRequestId || null,
-      office: 'Work From Home',
+      office: office || 'Head Office',
       date: today,
       timestamp: serverTimestamp(),
       location: coords

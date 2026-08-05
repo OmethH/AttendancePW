@@ -43,6 +43,7 @@ export default function AttendanceReports() {
     staffName: '',
     department: '',
     office: '',
+    workMode: '',
   });
   const [offices, setOffices] = useState([]);
   const [chartData, setChartData] = useState({ daily: [], department: [] });
@@ -112,6 +113,15 @@ export default function AttendanceReports() {
       // 5. Office location filter
       if (filters.office) {
         data = data.filter((r) => r.office === filters.office);
+      }
+
+      // 6. Work Mode filter
+      if (filters.workMode) {
+        if (filters.workMode === 'WFH') {
+          data = data.filter((r) => r.attendanceType === 'WFH' || r.office === 'Work From Home');
+        } else if (filters.workMode === 'OFFICE') {
+          data = data.filter((r) => r.attendanceType !== 'WFH' && r.office !== 'Work From Home');
+        }
       }
 
       // Pre-calculate hours per user per month
@@ -321,6 +331,19 @@ export default function AttendanceReports() {
               {offices.map((o) => (
                 <option key={o} value={o}>{o}</option>
               ))}
+            </select>
+          </div>
+          <div className="input-group">
+            <label htmlFor="filter-work-mode">Work Mode</label>
+            <select
+              id="filter-work-mode"
+              className="input"
+              value={filters.workMode}
+              onChange={(e) => setFilters((f) => ({ ...f, workMode: e.target.value }))}
+            >
+              <option value="">All Modes</option>
+              <option value="OFFICE">🏢 Office Only</option>
+              <option value="WFH">🏠 WFH Only</option>
             </select>
           </div>
           <div className="input-group" style={{ justifyContent: 'flex-end' }}>
