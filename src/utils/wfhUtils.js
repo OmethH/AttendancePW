@@ -4,6 +4,7 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
   orderBy,
   doc,
   updateDoc,
@@ -254,13 +255,32 @@ export async function recordWFHAttendance({ userId, userName, office, type, coor
     // Get device & IP info
     const deviceDetails = await getDeviceAndIPInfo();
 
+    // Resolve employee home office branch
+    let resolvedOffice = office;
+    if (!resolvedOffice || resolvedOffice === 'Work From Home') {
+      try {
+        if (userId) {
+          const userSnap = await getDoc(doc(db, 'users', userId));
+          if (userSnap.exists()) {
+            const uData = userSnap.data();
+            resolvedOffice = uData.officeLocation || uData.office || 'Head Office';
+          }
+        }
+      } catch (e) {
+        console.error('Error resolving user home office for WFH:', e);
+      }
+    }
+    if (!resolvedOffice || resolvedOffice === 'Work From Home') {
+      resolvedOffice = 'Head Office';
+    }
+
     const attendanceRecord = {
       userId,
       userName,
       type, // 'check-in' or 'check-out'
       attendanceType: 'WFH',
       wfhRequestId: wfhRequestId || null,
-      office: office || 'Head Office',
+      office: resolvedOffice,
       date: today,
       timestamp: serverTimestamp(),
       location: coords

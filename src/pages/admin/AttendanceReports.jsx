@@ -100,19 +100,36 @@ export default function AttendanceReports() {
         data = data.filter((r) => r.userName?.toLowerCase().includes(qStr));
       }
 
+      // Fetch user details for department & home office location cross-referencing
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const userDepts = {};
+      const userOffices = {};
+      usersSnap.forEach((docSnap) => {
+        const uData = docSnap.data();
+        userDepts[docSnap.id] = uData.department;
+        userOffices[docSnap.id] = uData.officeLocation || uData.office;
+      });
+
       // 4. Department filter (cross-referenced from users)
       if (filters.department) {
-        const usersSnap = await getDocs(collection(db, 'users'));
-        const userDepts = {};
-        usersSnap.forEach((doc) => {
-          userDepts[doc.id] = doc.data().department;
-        });
         data = data.filter((r) => userDepts[r.userId] === filters.department);
       }
 
       // 5. Office location filter
       if (filters.office) {
-        data = data.filter((r) => r.office === filters.office);
+        data = data.filter((r) => {
+          // Direct office check-in match
+          if (r.office === filters.office) return true;
+
+          // WFH entry match if employee's registered home office matches the selected office filter
+          const isWFH = r.attendanceType === 'WFH' || r.office === 'Work From Home';
+          const homeOffice = userOffices[r.userId] || r.office;
+          if (isWFH && homeOffice === filters.office) {
+            return true;
+          }
+
+          return false;
+        });
       }
 
       // 6. Work Mode filter
@@ -170,7 +187,14 @@ export default function AttendanceReports() {
            }
         }
 
-        return { ...r, hoursThisMonth: formattedMonthHours, dailyHours };
+        // For WFH entries, ensure office property displays their home branch instead of generic 'Work From Home'
+        const isWFH = r.attendanceType === 'WFH' || r.office === 'Work From Home';
+        let resolvedOffice = r.office;
+        if (isWFH && (!resolvedOffice || resolvedOffice === 'Work From Home')) {
+          resolvedOffice = userOffices[r.userId] || 'Head Office';
+        }
+
+        return { ...r, office: resolvedOffice || 'Main Office', hoursThisMonth: formattedMonthHours, dailyHours };
       });
 
       setRecords(data);
