@@ -285,15 +285,15 @@ export async function recordWFHAttendance({ userId, userName, office, type, coor
       timestamp: serverTimestamp(),
       location: coords
         ? {
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-            accuracy: coords.accuracy || null,
-            addressName: locationName,
-            googleMapsUrl: `https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`,
-          }
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          accuracy: coords.accuracy || null,
+          addressName: locationName,
+          googleMapsUrl: `https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`,
+        }
         : {
-            addressName: 'Work From Home',
-          },
+          addressName: 'Work From Home',
+        },
       deviceInformation: deviceDetails.deviceInformation,
       ipAddress: deviceDetails.ipAddress,
     };

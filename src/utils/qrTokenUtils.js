@@ -94,10 +94,10 @@ export async function recordAttendanceWithLocation(officeName, userId, userName,
     };
   } catch (error) {
     console.error('Error recording attendance:', error);
-    return { 
-      success: false, 
-      type: null, 
-      message: `Failed to record attendance: ${error.message || 'Unknown database error.'}` 
+    return {
+      success: false,
+      type: null,
+      message: `Failed to record attendance: ${error.message || 'Unknown database error.'}`
     };
   }
 }

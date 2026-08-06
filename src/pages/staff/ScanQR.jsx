@@ -12,7 +12,7 @@ export default function ScanQR() {
   const [locationError, setLocationError] = useState('');
   const [userCoords, setUserCoords] = useState(null);
   const [lastScanData, setLastScanData] = useState(null);
-  
+
   const [searchParams] = useSearchParams();
   const { currentUser, userProfile } = useAuth();
   const scannerRef = useRef(null);
@@ -22,10 +22,21 @@ export default function ScanQR() {
   // Check if we came from a static QR link (with ?office=xxx)
   useEffect(() => {
     const office = searchParams.get('office');
-    if (office && currentUser && userProfile && !processedRef.current) {
-      processedRef.current = true;
-      handleAttendanceProcess(office);
+    if (!office || !currentUser || !userProfile || processedRef.current) return;
+
+    // Guard against mobile browser tab restores re-triggering the scan.
+    // sessionStorage persists through tab restores but clears when the tab is closed,
+    // so this won't block a legitimate new scan in a fresh session.
+    const sessionKey = `qr_processed_${currentUser.uid}_${office}`;
+    if (sessionStorage.getItem(sessionKey)) {
+      // Already processed in this browser session — silently clean up the URL
+      navigate('/staff/scan', { replace: true });
+      return;
     }
+
+    processedRef.current = true;
+    sessionStorage.setItem(sessionKey, '1');
+    handleAttendanceProcess(office);
   }, [searchParams, currentUser, userProfile]);
 
   // Initialize camera scanner
@@ -59,7 +70,7 @@ export default function ScanQR() {
     scannerRef.current = scanner;
 
     return () => {
-      scanner.clear().catch(() => {});
+      scanner.clear().catch(() => { });
     };
   }, [scanning]);
 
@@ -154,7 +165,7 @@ export default function ScanQR() {
       lastScanData // Pass the previous scan data if this is a "Scan Again" action
     );
     setResult(res);
-    
+
     // Store the document info so "Scan Again" can replace it
     if (res.success && res.docId) {
       setLastScanData({ docId: res.docId, type: res.type });
@@ -163,6 +174,11 @@ export default function ScanQR() {
 
   function handleScanAgain() {
     processedRef.current = false;
+    // Clear the sessionStorage guard so the user can intentionally scan again
+    if (currentUser) {
+      const office = new URLSearchParams(window.location.search).get('office');
+      if (office) sessionStorage.removeItem(`qr_processed_${currentUser.uid}_${office}`);
+    }
     setResult(null);
     setUserCoords(null);
     setLocationError('');
@@ -231,9 +247,8 @@ export default function ScanQR() {
         {/* Result view */}
         {result && (
           <div
-            className={`scanner-result glass-strong animate-scale-in ${
-              result.success ? 'success' : 'error'
-            }`}
+            className={`scanner-result glass-strong animate-scale-in ${result.success ? 'success' : 'error'
+              }`}
             style={{ textAlign: 'center' }}
           >
             <div className="scanner-result-icon">
