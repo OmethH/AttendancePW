@@ -42,11 +42,7 @@ export default function StaffDashboard() {
     try {
       const today = formatDate(new Date());
 
-      // Fetch all records for this user (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const startDate = formatDate(thirtyDaysAgo);
-
+      // Fetch all records for this user
       const q = query(
         collection(db, 'attendance'),
         where('userId', '==', currentUser.uid)
@@ -54,9 +50,8 @@ export default function StaffDashboard() {
       const snap = await getDocs(q);
       let allRecords = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-      // Filter last 30 days & sort desc
+      // Sort desc
       allRecords = allRecords
-        .filter((r) => r.date >= startDate)
         .sort((a, b) => {
           if (a.date !== b.date) return (b.date || '').localeCompare(a.date || '');
           const tA = a.timestamp?.seconds || 0;
